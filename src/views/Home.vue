@@ -108,7 +108,7 @@ const offlineStore = useOfflineStore()
 const userName = computed(() => authStore.userName)
 const offlineCount = computed(() => offlineStore.totalPendingSync)
 const showFallbackText = ref(false)
-import logoImg from '/images/the_payments_expert.png'
+import logoImg from '@/assets/images/the_payments_expert.png'
 const logoUrl = computed(() => logoImg)
 
 const handleLogout = async () => {

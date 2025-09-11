@@ -1,10 +1,10 @@
 // Equipment data extracted from Clover product images
 // Import images
-import cloverMiniImg from '/images/clover-mini.png'
-import cloverCashDrawerImg from '/images/clover-cash-drawer.png'
-import cloverKitchenPrinterImg from '/images/clover-kitchen-printer.png'
-import cloverFlexImg from '/images/clover-flex.png'
-import cloverStationDuoImg from '/images/clover-station-duo.png'
+import cloverMiniImg from '@/assets/images/clover-mini.png'
+import cloverCashDrawerImg from '@/assets/images/clover-cash-drawer.png'
+import cloverKitchenPrinterImg from '@/assets/images/clover-kitchen-printer.png'
+import cloverFlexImg from '@/assets/images/clover-flex.png'
+import cloverStationDuoImg from '@/assets/images/clover-station-duo.png'
 
 export const equipmentData = [
   {
