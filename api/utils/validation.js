@@ -128,8 +128,9 @@ function validateApplicationData(data) {
               errors.push(`${prefix}: Quantity must be greater than 0`)
             }
 
-            // Fallback to default price for non-purchase contracts when price is missing/invalid
-            if ((!Number.isFinite(monthlyPriceNumber) || monthlyPriceNumber <= 0) && device.contractType !== 'purchase') {
+            // Fallback to default price only when the field is absent or empty string (not when 0 or some other explicit value)
+            const isEmpty = device?.monthlyPrice === undefined || device?.monthlyPrice === null || device?.monthlyPrice === ''
+            if ((isEmpty || !Number.isFinite(monthlyPriceNumber)) && device.contractType !== 'purchase') {
               const fallback = defaultDevicePrices[deviceId]
               if (Number.isFinite(fallback) && fallback > 0) {
                 monthlyPriceNumber = fallback

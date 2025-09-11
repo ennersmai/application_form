@@ -347,14 +347,18 @@ const updateDevicePricing = (deviceId) => {
   const currentMonthlyPrice = devicePricing[deviceId].monthlyPrice
   const defaultPrice = config?.defaultPrice || 25.00
 
-  // If quantity > 0 and monthlyPrice is 0 or undefined, set it to default
-  if (devicePricing[deviceId].quantity > 0 && (!currentMonthlyPrice || currentMonthlyPrice <= 0)) {
-    devicePricing[deviceId].monthlyPrice = defaultPrice
+  // If quantity > 0 and monthlyPrice is null/undefined/empty string, set to default
+  // Do NOT override if agent selected a price (including 0 is invalid for rentals but keep user input)
+  if (devicePricing[deviceId].quantity > 0) {
+    const isUnset = currentMonthlyPrice === undefined || currentMonthlyPrice === null || currentMonthlyPrice === ''
+    if (isUnset) {
+      devicePricing[deviceId].monthlyPrice = defaultPrice
+    }
   }
 
   formStore.pricing.devicePricing[deviceId] = {
     quantity: devicePricing[deviceId].quantity,
-    monthlyPrice: devicePricing[deviceId].monthlyPrice,
+    monthlyPrice: Number(devicePricing[deviceId].monthlyPrice),
     contractType: devicePricing[deviceId].contractType
   }
   
