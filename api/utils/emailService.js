@@ -183,7 +183,25 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     }
     console.log('EXACT HEADERS BEING SENT:')
     console.log(JSON.stringify(headers, null, 2))
-    console.log('=== END DEBUG INFO ===')
+    // Validate all email addresses are properly formatted
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    
+    console.log('=== EMAIL VALIDATION ===')
+    console.log('FROM valid:', emailRegex.test(emailPayload.from), emailPayload.from)
+    console.log('TO valid:', emailRegex.test(emailPayload.to), emailPayload.to)
+    console.log('REPLY_TO valid:', emailRegex.test(emailPayload.reply_to), emailPayload.reply_to)
+    console.log('=== END EMAIL VALIDATION ===')
+    
+    // If any email is invalid, throw a clear error
+    if (!emailRegex.test(emailPayload.from)) {
+      throw new Error(`Invalid FROM email format: ${emailPayload.from}`)
+    }
+    if (!emailRegex.test(emailPayload.to)) {
+      throw new Error(`Invalid TO email format: ${emailPayload.to}`)
+    }
+    if (!emailRegex.test(emailPayload.reply_to)) {
+      throw new Error(`Invalid REPLY_TO email format: ${emailPayload.reply_to}`)
+    }
 
     // TEMPORARY: Let's also try the exact format that worked in Postman
     const postmanPayload = {
