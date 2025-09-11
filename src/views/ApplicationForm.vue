@@ -328,9 +328,13 @@ watch(() => formStore.$state, () => {
   
   autoSaveTimeout = setTimeout(async () => {
     try {
-      if (offlineStore.autoSaveEnabled && formStore.applicationId) {
-        await offlineStore.saveDraft(formStore.getSubmissionData())
-        console.log('Auto-saved draft')
+      if (offlineStore.autoSaveEnabled && formStore.applicationId && !uiStore.isSubmitting) {
+        // Check if this application has already been submitted
+        const existingApp = await offlineStore.getApplicationById(formStore.applicationId)
+        if (!existingApp || existingApp.status === 'draft') {
+          await offlineStore.saveDraft(formStore.getSubmissionData())
+          console.log('Auto-saved draft')
+        }
       }
     } catch (error) {
       console.error('Auto-save error:', error)

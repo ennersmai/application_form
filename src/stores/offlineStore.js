@@ -214,6 +214,15 @@ export const useOfflineStore = defineStore('offline', {
     },
 
     /**
+     * Get application by ID
+     * @param {string} applicationId 
+     * @returns {Promise<Object|null>} Application data
+     */
+    async getApplicationById(applicationId) {
+      return await offlineService.getApplication(applicationId)
+    },
+
+    /**
      * Set auto-save configuration
      * @param {boolean} enabled 
      * @param {number} delay 

@@ -179,7 +179,7 @@ function generateEmailContent(data) {
   const agentEmail = data.agentInfo.email
   
   // Calculate totals
-  const equipmentTotal = data.totalEquipmentCost || 0
+  const equipmentTotal = data.pricing.totalMonthlyCost || 0
   const urgentFee = data.agentInfo.isUrgent ? 20.00 : 0
   const totalFees = equipmentTotal + urgentFee
 
@@ -257,19 +257,26 @@ function generateEmailContent(data) {
         </div>
       </div>
 
-      ${data.equipment.selectedDevices.length > 0 ? `
+      ${data.pricing.devicePricing && Object.keys(data.pricing.devicePricing).length > 0 ? `
         <div class="section">
           <h3>Equipment</h3>
-          ${data.equipment.selectedDevices.map(device => `
-            <div class="grid">
-              <div><span class="key">${device.name}:</span> <span class="value">${device.optionDescription} (${device.quantity}x)</span></div>
-              <div style="text-align: right;"><span class="value">£${(device.totalCost || 0).toFixed(2)}</span></div>
-            </div>
-          `).join('')}
+          ${Object.entries(data.pricing.devicePricing)
+            .filter(([_, device]) => device.quantity > 0)
+            .map(([deviceId, device]) => {
+              const deviceName = formatDeviceName(deviceId)
+              const contractTypeLabel = formatContractType(device.contractType)
+              const totalCost = device.quantity * device.monthlyPrice
+              return `
+                <div class="grid">
+                  <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} (${device.quantity}x)</span></div>
+                  <div style="text-align: right;"><span class="value">£${totalCost.toFixed(2)}/month</span></div>
+                </div>
+              `
+            }).join('')}
           <div style="border-top: 1px solid #e5e7eb; margin-top: 10px; padding-top: 10px;">
             <div class="grid">
-              <div><span class="key">Equipment Total:</span></div>
-              <div style="text-align: right;"><span class="key">£${equipmentTotal.toFixed(2)}</span></div>
+              <div><span class="key">Equipment Monthly Total:</span></div>
+              <div style="text-align: right;"><span class="key">£${(data.pricing.totalMonthlyCost || 0).toFixed(2)}</span></div>
             </div>
           </div>
         </div>
@@ -347,10 +354,17 @@ Consumer Credit: ${data.pricing.consumerCredit}%
 Commercial Card: ${data.pricing.commercialCard}%
 Authorization Fee: £${data.pricing.authorisationFee}
 
-${data.equipment.selectedDevices.length > 0 ? `
+${data.pricing.devicePricing && Object.keys(data.pricing.devicePricing).length > 0 ? `
 EQUIPMENT
-${data.equipment.selectedDevices.map(device => `${device.name}: ${device.optionDescription} (${device.quantity}x) - £${(device.totalCost || 0).toFixed(2)}`).join('\n')}
-Equipment Total: £${equipmentTotal.toFixed(2)}
+${Object.entries(data.pricing.devicePricing)
+  .filter(([_, device]) => device.quantity > 0)
+  .map(([deviceId, device]) => {
+    const deviceName = formatDeviceName(deviceId)
+    const contractTypeLabel = formatContractType(device.contractType)
+    const totalCost = device.quantity * device.monthlyPrice
+    return `${deviceName}: ${contractTypeLabel} (${device.quantity}x) - £${totalCost.toFixed(2)}/month`
+  }).join('\n')}
+Equipment Monthly Total: £${(data.pricing.totalMonthlyCost || 0).toFixed(2)}
 ` : ''}
 
 BANKING DETAILS
@@ -412,4 +426,24 @@ function formatSortCode(sortCode) {
     return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 6)}`
   }
   return sortCode
+}
+
+function formatDeviceName(deviceId) {
+  const deviceNames = {
+    'clover-flex': 'Clover Flex',
+    'clover-mini': 'Clover Mini',
+    'clover-station-duo': 'Clover Station Duo',
+    'clover-kitchen-printer': 'Clover Kitchen Printer',
+    'clover-cash-drawer': 'Clover Cash Drawer'
+  }
+  return deviceNames[deviceId] || deviceId
+}
+
+function formatContractType(contractType) {
+  const contractTypes = {
+    'standard': '48 Month Contract',
+    'promo': '48 Month - 6 months at £1pm',
+    'purchase': 'Upfront Purchase'
+  }
+  return contractTypes[contractType] || contractType
 }

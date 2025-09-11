@@ -252,17 +252,49 @@
               <label :for="`postcode-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
                 Postcode *
               </label>
-              <input
-                :id="`postcode-${principal.id}`"
-                v-model="principal.homeAddress.postcode"
-                type="text"
-                required
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                :class="{ 'border-red-300': !principal.homeAddress.postcode && (showValidation || touchedFields[`postcode-${principal.id}`]) }"
-                placeholder="e.g., SW1A 1AA"
-                @input="updatePrincipalAddress(principal.id, 'postcode', $event.target.value)"
-                @blur="touchedFields[`postcode-${principal.id}`] = true"
-              />
+              <div class="flex space-x-2">
+                <input
+                  :id="`postcode-${principal.id}`"
+                  v-model="principal.homeAddress.postcode"
+                  type="text"
+                  required
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  :class="{ 'border-red-300': !principal.homeAddress.postcode && (showValidation || touchedFields[`postcode-${principal.id}`]) }"
+                  placeholder="e.g., SW1A 1AA"
+                  @input="updatePrincipalAddress(principal.id, 'postcode', $event.target.value)"
+                  @blur="touchedFields[`postcode-${principal.id}`] = true"
+                />
+                <button
+                  type="button"
+                  @click="lookupHomeAddress(principal.id)"
+                  :disabled="!principal.homeAddress.postcode || lookupState[principal.id]?.loading"
+                  class="px-4 py-2 border border-primary-600 text-primary-600 rounded-md hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  <span v-if="lookupState[principal.id]?.loading">Loading...</span>
+                  <span v-else>Lookup</span>
+                </button>
+              </div>
+              
+              <!-- Address Results -->
+              <div v-if="lookupState[principal.id]?.addresses?.length > 0" class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Select Address:</label>
+                <div class="space-y-1 max-h-32 overflow-y-auto border border-gray-200 rounded-md">
+                  <button
+                    v-for="(address, index) in lookupState[principal.id].addresses"
+                    :key="index"
+                    type="button"
+                    @click="selectHomeAddress(principal.id, address)"
+                    class="w-full text-left px-3 py-2 hover:bg-gray-50 focus:bg-primary-50 focus:outline-none text-sm border-b border-gray-100 last:border-b-0"
+                  >
+                    {{ address.formatted_address }}
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Error Message -->
+              <div v-if="lookupState[principal.id]?.error" class="mt-1 text-sm text-red-600">
+                {{ lookupState[principal.id].error }}
+              </div>
             </div>
           </div>
         </div>
@@ -338,6 +370,7 @@ const uiStore = useUiStore()
 const principals = ref(formStore.principals)
 const showValidation = ref(false)
 const touchedFields = ref({})
+const lookupState = ref({})
 
 // Computed properties
 const totalOwnership = computed(() => {
@@ -432,6 +465,68 @@ const decrementOwnership = (id) => {
     const newValue = Math.max(0, (principal.ownershipPercentage || 0) - 1)
     updatePrincipal(id, 'ownershipPercentage', newValue)
   }
+}
+
+// Address lookup methods
+const lookupHomeAddress = async (principalId) => {
+  const principal = principals.value.find(p => p.id === principalId)
+  if (!principal?.homeAddress?.postcode) return
+
+  // Initialize lookup state for this principal
+  if (!lookupState.value[principalId]) {
+    lookupState.value[principalId] = {}
+  }
+
+  lookupState.value[principalId].loading = true
+  lookupState.value[principalId].error = null
+  lookupState.value[principalId].addresses = []
+
+  try {
+    const response = await fetch('/api/getaddress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        postcode: principal.homeAddress.postcode
+      })
+    })
+
+    const data = await response.json()
+
+    if (response.ok && data.success && data.addresses) {
+      lookupState.value[principalId].addresses = data.addresses
+      if (data.addresses.length === 0) {
+        lookupState.value[principalId].error = 'No addresses found for this postcode'
+      }
+    } else {
+      lookupState.value[principalId].error = data.error || 'Address lookup failed'
+    }
+  } catch (error) {
+    console.error('Address lookup error:', error)
+    lookupState.value[principalId].error = 'Address lookup service unavailable'
+  } finally {
+    lookupState.value[principalId].loading = false
+  }
+}
+
+const selectHomeAddress = (principalId, address) => {
+  const principal = principals.value.find(p => p.id === principalId)
+  if (!principal) return
+
+  // Update the principal's home address
+  principal.homeAddress.line1 = address.line_1 || ''
+  principal.homeAddress.line2 = address.line_2 || ''
+  principal.homeAddress.city = address.town_or_city || ''
+  principal.homeAddress.county = address.county || ''
+  principal.homeAddress.postcode = address.postcode || principal.homeAddress.postcode
+
+  // Clear the lookup results
+  if (lookupState.value[principalId]) {
+    lookupState.value[principalId].addresses = []
+  }
+
+  formStore.touch()
 }
 
 // Watchers

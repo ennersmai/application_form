@@ -102,21 +102,18 @@ export async function generateApplicationPDF(applicationData) {
 
       // Equipment
       addSection(doc, 'EQUIPMENT')
-      if (applicationData.equipment.selectedDevices.length > 0) {
-        applicationData.equipment.selectedDevices.forEach(device => {
-          addKeyValue(doc, device.name, `${device.optionDescription} (Qty: ${device.quantity}) - £${device.totalCost?.toFixed(2) || '0.00'}`)
+      if (applicationData.pricing.devicePricing && Object.keys(applicationData.pricing.devicePricing).length > 0) {
+        Object.entries(applicationData.pricing.devicePricing).forEach(([deviceId, device]) => {
+          if (device.quantity > 0) {
+            const deviceName = formatDeviceName(deviceId)
+            const contractTypeLabel = formatContractType(device.contractType)
+            const totalCost = device.quantity * device.monthlyPrice
+            addKeyValue(doc, deviceName, `${contractTypeLabel} (Qty: ${device.quantity}) - £${totalCost.toFixed(2)}/month`)
+          }
         })
-        addKeyValue(doc, 'Equipment Total', `£${applicationData.totalEquipmentCost?.toFixed(2) || '0.00'}`)
+        addKeyValue(doc, 'Equipment Monthly Total', `£${applicationData.pricing.totalMonthlyCost?.toFixed(2) || '0.00'}`)
       } else {
         addKeyValue(doc, 'Equipment', 'None selected')
-      }
-
-      // Add-on services
-      const addOns = []
-      if (applicationData.equipment.motoEnabled) addOns.push('MOTO')
-      if (applicationData.equipment.cashbackEnabled) addOns.push('Cashback')
-      if (addOns.length > 0) {
-        addKeyValue(doc, 'Add-on Services', addOns.join(', '))
       }
       doc.moveDown()
 
@@ -129,7 +126,7 @@ export async function generateApplicationPDF(applicationData) {
 
       // Summary
       addSection(doc, 'SUMMARY')
-      const equipmentTotal = applicationData.totalEquipmentCost || 0
+      const equipmentTotal = applicationData.pricing.totalMonthlyCost || 0
       const urgentFee = applicationData.agentInfo.isUrgent ? 20.00 : 0
       const totalFees = equipmentTotal + urgentFee
 
@@ -192,4 +189,24 @@ function formatSortCode(sortCode) {
     return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 6)}`
   }
   return sortCode
+}
+
+function formatDeviceName(deviceId) {
+  const deviceNames = {
+    'clover-flex': 'Clover Flex',
+    'clover-mini': 'Clover Mini',
+    'clover-station-duo': 'Clover Station Duo',
+    'clover-kitchen-printer': 'Clover Kitchen Printer',
+    'clover-cash-drawer': 'Clover Cash Drawer'
+  }
+  return deviceNames[deviceId] || deviceId
+}
+
+function formatContractType(contractType) {
+  const contractTypes = {
+    'standard': '48 Month Contract',
+    'promo': '48 Month - 6 months at £1pm',
+    'purchase': 'Upfront Purchase'
+  }
+  return contractTypes[contractType] || contractType
 }
