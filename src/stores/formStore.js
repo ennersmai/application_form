@@ -1,0 +1,218 @@
+import { defineStore } from 'pinia'
+
+export const useFormStore = defineStore('form', {
+  state: () => ({
+    // Step 0: Business Type
+    businessTypeCheck: {
+      type: 'sole_trader', // 'sole_trader' or 'limited_company'
+      companyNumber: '',
+      companyDetails: null,
+      directorsVerified: false
+    },
+
+    // Step 1: Agent Information
+    agentInfo: {
+      name: '', // Auto-populated from auth
+      email: '', // Auto-populated from auth
+      isUrgent: false
+    },
+
+    // Step 2: Principal Information
+    principals: [
+      {
+        id: 1,
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        position: 'sole_trader', // sole_trader, director, ultimate_owner
+        ownershipPercentage: 100
+      }
+    ],
+
+    // Step 3: Business Information
+    businessInfo: {
+      businessType: 'sole_trader', // sole_trader, ltd, partnership
+      legalName: '',
+      tradingName: '',
+      companyNumber: '',
+      tradingAddress: {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        postcode: '',
+        country: 'UK'
+      },
+      vatRegistered: false
+    },
+
+    // Step 4: Trading Information
+    tradingInfo: {
+      mccCode: '',
+      mccDescription: '',
+      amexRequired: false,
+      projectedAnnualTurnover: '',
+      estimatedAverageTransaction: ''
+    },
+
+    // Step 5: Pricing
+    pricing: {
+      consumerDebit: 0.40,
+      consumerCredit: 0.65,
+      commercialCard: 2.00,
+      authorisationFee: 0.04
+    },
+
+    // Step 6: Equipment
+    equipment: {
+      selectedDevices: [],
+      motoEnabled: false,
+      cashbackEnabled: false
+    },
+
+    // Step 7: Banking
+    banking: {
+      accountName: '', // Auto-populated from legal name
+      sortCode: '',
+      accountNumber: ''
+    },
+
+    // Meta
+    applicationId: null,
+    createdAt: null,
+    lastModified: null
+  }),
+
+  getters: {
+    // Check if sole trader has only one principal
+    isValidSoleTrader: (state) => {
+      return state.businessInfo.businessType !== 'sole_trader' || state.principals.length === 1
+    },
+
+    // Check if all principals with >25% are marked
+    beneficialOwners: (state) => {
+      return state.principals.filter(p => p.ownershipPercentage > 25)
+    },
+
+    // Calculate total equipment cost
+    totalEquipmentCost: (state) => {
+      return state.equipment.selectedDevices.reduce((total, device) => {
+        return total + (device.price * device.quantity)
+      }, 0)
+    },
+
+    // Check if urgent fee applies
+    urgentFee: (state) => {
+      return state.agentInfo.isUrgent ? 20 : 0
+    }
+  },
+
+  actions: {
+    // Add a new principal
+    addPrincipal() {
+      const newId = Math.max(...this.principals.map(p => p.id)) + 1
+      this.principals.push({
+        id: newId,
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        position: 'director',
+        ownershipPercentage: 0
+      })
+    },
+
+    // Remove a principal
+    removePrincipal(id) {
+      if (this.principals.length > 1) {
+        this.principals = this.principals.filter(p => p.id !== id)
+      }
+    },
+
+    // Update business info based on type
+    updateBusinessType(type) {
+      this.businessInfo.businessType = type
+      
+      // Auto-populate legal name based on type
+      if (type === 'sole_trader' && this.principals.length > 0) {
+        const principal = this.principals[0]
+        this.businessInfo.legalName = `${principal.firstName} ${principal.lastName}`.trim()
+      } else if (type === 'partnership' && this.principals.length >= 2) {
+        const names = this.principals
+          .slice(0, 2)
+          .map(p => `${p.firstName} ${p.lastName}`.trim())
+          .filter(n => n)
+        this.businessInfo.legalName = names.join(' & ')
+      }
+    },
+
+    // Set company details from Companies House API
+    setCompanyDetails(details) {
+      this.businessTypeCheck.companyDetails = details
+      if (details) {
+        this.businessInfo.legalName = details.company_name
+        this.businessInfo.companyNumber = details.company_number
+      }
+    },
+
+    // Update trading address
+    setTradingAddress(address) {
+      this.businessInfo.tradingAddress = { ...this.businessInfo.tradingAddress, ...address }
+    },
+
+    // Add/update equipment
+    addEquipment(device) {
+      const existing = this.equipment.selectedDevices.find(d => d.id === device.id)
+      if (existing) {
+        existing.quantity = device.quantity
+        existing.option = device.option
+      } else {
+        this.equipment.selectedDevices.push(device)
+      }
+    },
+
+    // Remove equipment
+    removeEquipment(deviceId) {
+      this.equipment.selectedDevices = this.equipment.selectedDevices.filter(d => d.id !== deviceId)
+    },
+
+    // Initialize form with agent details
+    initializeWithAgent(user) {
+      this.agentInfo.name = user.user_metadata?.full_name || user.email
+      this.agentInfo.email = user.email
+      this.applicationId = `APP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      this.createdAt = new Date().toISOString()
+      this.lastModified = new Date().toISOString()
+    },
+
+    // Update last modified
+    touch() {
+      this.lastModified = new Date().toISOString()
+    },
+
+    // Reset form
+    resetForm() {
+      this.$reset()
+    },
+
+    // Get form data for submission
+    getSubmissionData() {
+      return {
+        applicationId: this.applicationId,
+        businessTypeCheck: this.businessTypeCheck,
+        agentInfo: this.agentInfo,
+        principals: this.principals,
+        businessInfo: this.businessInfo,
+        tradingInfo: this.tradingInfo,
+        pricing: this.pricing,
+        equipment: this.equipment,
+        banking: this.banking,
+        totalEquipmentCost: this.totalEquipmentCost,
+        urgentFee: this.urgentFee,
+        createdAt: this.createdAt,
+        submittedAt: new Date().toISOString()
+      }
+    }
+  }
+})

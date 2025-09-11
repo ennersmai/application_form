@@ -1,0 +1,12 @@
+{
+  "name": "agent-application-api",
+  "version": "1.0.0",
+  "description": "Serverless API functions for agent application submission",
+  "main": "submit-application.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "pdfkit": "^0.14.0",
+    "nodemailer": "^6.9.7",
+    "axios": "^1.6.2"
+  }
+}
