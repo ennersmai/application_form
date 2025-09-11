@@ -16,6 +16,9 @@ const EMAIL_CONFIG = {
 
 // Optional: Preconfigured campaign to trigger via Sender.net Campaigns API
 const SENDER_CAMPAIGN_ID = process.env.SENDER_CAMPAIGN_ID
+// Optional: Webhook to trigger external automation (e.g., Sender.net automation via webhook)
+const SENDER_WEBHOOK_URL = process.env.SENDER_WEBHOOK_URL
+const SENDER_WEBHOOK_TOKEN = process.env.SENDER_WEBHOOK_TOKEN
 
 async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   // Based on Sender.net API documentation, use transactional campaigns for one-off emails
@@ -31,6 +34,21 @@ async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   
   let lastError = null
   
+  // Optional fastest path: send via webhook if configured
+  if (SENDER_WEBHOOK_URL) {
+    try {
+      console.log('Trying webhook send at:', SENDER_WEBHOOK_URL)
+      const result = await attemptSendWebhook(SENDER_WEBHOOK_URL, applicationData, pdfBuffer, user)
+      if (result.success) {
+        console.log('Success via webhook')
+        return result
+      }
+    } catch (error) {
+      console.log('Webhook send failed:', error.message)
+      lastError = error
+    }
+  }
+
   // Optional fast-path: trigger a prebuilt campaign if configured
   if (SENDER_CAMPAIGN_ID) {
     try {
@@ -181,9 +199,7 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     const url = apiUrl
     console.log('Sender.net API URL:', url)
     console.log('Sender.net API Token exists:', !!SENDER_CONFIG.apiToken)
-    console.log('Sender.net API Token (first 10 chars):', SENDER_CONFIG.apiToken?.substring(0, 10) + '...')
-    console.log('Email FROM domain:', EMAIL_CONFIG.from)
-    console.log('Email payload:', JSON.stringify(emailPayload, null, 2))
+    console.log('Email FROM:', EMAIL_CONFIG.from)
     
     const response = await fetch(url, {
       method: 'POST',
