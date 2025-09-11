@@ -137,7 +137,8 @@ const credentials = ref({
 const loading = computed(() => authStore.loading)
 const error = ref('')
 const isDevelopment = import.meta.env.DEV
-const logoUrl = computed(() => '/images/the_payments_expert.png')
+import logoImg from '/images/the_payments_expert.png'
+const logoUrl = computed(() => logoImg)
 
 const toggleMode = () => {
   isSignUp.value = !isSignUp.value

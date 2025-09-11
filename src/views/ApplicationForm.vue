@@ -136,6 +136,19 @@
       @confirm="confirmSave"
       @cancel="cancelSave"
     />
+
+    <!-- Submission Modal -->
+    <SubmissionModal
+      :is-visible="showSubmissionModal"
+      :type="submissionModalData.type"
+      :title="submissionModalData.title"
+      :message="submissionModalData.message"
+      :primary-button-text="submissionModalData.primaryButtonText"
+      :secondary-button-text="submissionModalData.secondaryButtonText"
+      @primary-action="() => handleSubmissionModalAction('primary')"
+      @secondary-action="() => handleSubmissionModalAction('secondary')"
+      @close="() => handleSubmissionModalAction('close')"
+    />
   </div>
 </template>
 
@@ -147,6 +160,7 @@ import { useUiStore } from '@/stores/uiStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useOfflineStore } from '@/stores/offlineStore'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import SubmissionModal from '@/components/SubmissionModal.vue'
 
 // Import step components (we'll create these next)
 import Step0BusinessType from '@/components/steps/Step0BusinessType.vue'
@@ -167,6 +181,16 @@ const offlineStore = useOfflineStore()
 
 // Modal state
 const showSaveConfirmation = ref(false)
+
+// Submission modal state
+const showSubmissionModal = ref(false)
+const submissionModalData = ref({
+  type: 'loading',
+  title: '',
+  message: '',
+  primaryButtonText: 'OK',
+  secondaryButtonText: 'Cancel'
+})
 
 // Step components mapping
 const stepComponents = {
@@ -233,6 +257,15 @@ const cancelSave = () => {
 
 const submitApplication = async () => {
   try {
+    // Show loading modal
+    submissionModalData.value = {
+      type: 'loading',
+      title: 'Submitting Application',
+      message: 'Please wait while we process your merchant application...',
+      primaryButtonText: 'OK',
+      secondaryButtonText: 'Cancel'
+    }
+    showSubmissionModal.value = true
     uiStore.setSubmitting(true)
     
     const submissionData = formStore.getSubmissionData()
@@ -241,15 +274,41 @@ const submitApplication = async () => {
     // Queue for submission (will sync immediately if online)
     await offlineStore.queueForSubmission(submissionData)
     
-    // Show success message and redirect
-    alert('Application submitted successfully! It will be processed and you will receive confirmation via email.')
-    router.push({ name: 'Home' })
+    // Show success modal
+    submissionModalData.value = {
+      type: 'success',
+      title: 'Application Submitted Successfully!',
+      message: 'Your merchant application has been submitted and will be processed shortly. You will receive confirmation via email.',
+      primaryButtonText: 'Continue',
+      secondaryButtonText: ''
+    }
     
   } catch (error) {
     console.error('Submission error:', error)
+    
+    // Show error modal
+    submissionModalData.value = {
+      type: 'error',
+      title: 'Submission Failed',
+      message: 'There was an error submitting your application. Please check your connection and try again.',
+      primaryButtonText: 'Try Again',
+      secondaryButtonText: 'Cancel'
+    }
     uiStore.setError(`Submission failed: ${error.message}`)
   } finally {
     uiStore.setSubmitting(false)
+  }
+}
+
+const handleSubmissionModalAction = (action) => {
+  showSubmissionModal.value = false
+  
+  if (submissionModalData.value.type === 'success') {
+    // Redirect to home after success
+    router.push({ name: 'Home' })
+  } else if (submissionModalData.value.type === 'error' && action === 'primary') {
+    // Retry submission
+    submitApplication()
   }
 }
 
