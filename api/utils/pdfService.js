@@ -56,6 +56,11 @@ async function generateApplicationPDF(applicationData) {
         addKeyValue(doc, '  Phone', principal.phone)
         addKeyValue(doc, '  Position', formatPosition(principal.position))
         addKeyValue(doc, '  Ownership', `${principal.ownershipPercentage}%`)
+        // Include principal home address
+        const homeAddress = principal.homeAddress ? formatAddress(principal.homeAddress) : ''
+        if (homeAddress) {
+          addKeyValue(doc, '  Home Address', homeAddress)
+        }
         if (principal.ownershipPercentage > 25) {
           addKeyValue(doc, '  Status', 'Beneficial Owner (>25%)')
         }
@@ -72,14 +77,7 @@ async function generateApplicationPDF(applicationData) {
       
       // Format address
       const address = applicationData.businessInfo.tradingAddress
-      const formattedAddress = [
-        address.line1,
-        address.line2,
-        address.city,
-        address.county,
-        address.postcode
-      ].filter(Boolean).join(', ')
-      
+      const formattedAddress = formatAddress(address)
       addKeyValue(doc, 'Trading Address', formattedAddress)
       addKeyValue(doc, 'VAT Registered', applicationData.businessInfo.vatRegistered ? 'Yes' : 'No')
       doc.moveDown()
@@ -209,6 +207,18 @@ function formatContractType(contractType) {
     'purchase': 'Upfront Purchase'
   }
   return contractTypes[contractType] || contractType
+}
+
+function formatAddress(address) {
+  if (!address) return ''
+  const parts = [
+    address.line1,
+    address.line2,
+    address.city,
+    address.county,
+    address.postcode
+  ].filter(part => part && String(part).trim())
+  return parts.join(', ')
 }
 
 // CommonJS exports
