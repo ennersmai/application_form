@@ -170,15 +170,58 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       }]
     }
 
-    console.log('Sender.net API URL:', apiUrl)
-    console.log('Email payload structure:', {
-      from: emailPayload.from,
-      to: emailPayload.to,
-      subject: emailPayload.subject,
-      hasHtml: !!emailPayload.html,
-      hasText: !!emailPayload.text,
-      hasAttachments: !!emailPayload.attachments
+    console.log('=== DEBUGGING SENDER.NET REQUEST ===')
+    console.log('API URL:', apiUrl)
+    console.log('API Token (first 10 chars):', SENDER_CONFIG.apiToken?.substring(0, 10) + '...')
+    console.log('FROM email:', EMAIL_CONFIG.from)
+    console.log('TO email:', EMAIL_CONFIG.to)
+    
+    // Log the EXACT payload being sent
+    console.log('EXACT PAYLOAD BEING SENT:')
+    console.log(JSON.stringify(emailPayload, null, 2))
+    
+    // Log the EXACT headers being sent
+    const headers = {
+      'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+    console.log('EXACT HEADERS BEING SENT:')
+    console.log(JSON.stringify(headers, null, 2))
+    console.log('=== END DEBUG INFO ===')
+
+    // TEMPORARY: Let's also try the exact format that worked in Postman
+    const postmanPayload = {
+      "from": "james@thepaymentsexpert.com",
+      "to": "James@ecrlimited.co.uk", // Replace with your test email
+      "subject": "API Test from Code",
+      "html": "<h1>Test from code</h1>",
+      "editor": "html"
+    }
+    
+    console.log('=== TESTING WITH POSTMAN PAYLOAD ===')
+    console.log('Postman payload:', JSON.stringify(postmanPayload, null, 2))
+    
+    // Try the exact Postman payload first
+    const postmanResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(postmanPayload)
     })
+    
+    console.log('Postman test response status:', postmanResponse.status)
+    const postmanText = await postmanResponse.text()
+    console.log('Postman test response body:', postmanText)
+    
+    if (postmanResponse.ok) {
+      console.log('🎉 POSTMAN PAYLOAD WORKED! The issue is in your email content/format')
+      // Don't return yet, let's see what happens with the real payload
+    } else {
+      console.log('❌ Even Postman payload failed - this is a token/permissions issue')
+    }
+    console.log('=== END POSTMAN TEST ===')
+    
+    console.log('Now trying with real application data...')
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -234,7 +277,6 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     throw new Error(`Failed to send email: ${error.message}`)
   }
 }
-
 function generateEmailContent(data) {
   const businessName = data.businessInfo.legalName
   const applicationId = data.applicationId
