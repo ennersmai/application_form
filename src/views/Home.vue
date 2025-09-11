@@ -85,11 +85,6 @@
           </div>
         </div>
 
-        <!-- Recent Activity (placeholder for future) -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Submissions</h3>
-          <p class="text-gray-500 text-sm">Your recent submissions will appear here.</p>
-        </div>
       </div>
     </main>
   </div>

@@ -94,8 +94,8 @@ export const syncService = {
           APPLICATION_STATUS.SYNCED
         )
         
-        // Optionally delete synced applications to save space
-        // await offlineService.deleteApplication(application.applicationId)
+        // Delete synced applications to keep drafts clean
+        await offlineService.deleteApplication(application.applicationId)
         
         console.log(`Successfully submitted application ${application.applicationId}`)
       } else {
