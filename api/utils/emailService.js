@@ -78,7 +78,8 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
         reply_to: EMAIL_CONFIG.replyTo || user.email,
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
         html: emailContent.html,
-        text: emailContent.text
+        text: emailContent.text,
+        editor: "html" // Required by Sender.net transactional API
       }
     } else {
       // Standard email format

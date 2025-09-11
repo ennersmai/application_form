@@ -164,6 +164,25 @@ export const offlineService = {
   },
 
   /**
+   * Get synced (successfully submitted) applications for an agent
+   * @param {string} agentId 
+   * @returns {Promise<Array>}
+   */
+  async getSynced(agentId) {
+    try {
+      return await db.applications
+        .where('agentId')
+        .equals(agentId)
+        .filter(app => app.status === APPLICATION_STATUS.SYNCED)
+        .reverse()
+        .sortBy('lastSyncAttempt')
+    } catch (error) {
+      console.error('Error getting synced applications:', error)
+      return []
+    }
+  },
+
+  /**
    * Get all applications (for overview)
    * @param {string} agentId 
    * @returns {Promise<Array>} All applications

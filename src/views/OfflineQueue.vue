@@ -157,6 +157,44 @@
         </div>
       </div>
 
+      <!-- Successfully Submitted Applications -->
+      <div v-if="applications.synced && applications.synced.length > 0" class="bg-white rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">Successfully Submitted</h2>
+          <p class="text-sm text-gray-600">Applications that have been submitted and processed</p>
+        </div>
+        <div class="divide-y divide-gray-200">
+          <div
+            v-for="app in applications.synced"
+            :key="app.applicationId"
+            class="px-6 py-4 hover:bg-gray-50"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">{{ getApplicationTitle(app) }}</p>
+                    <p class="text-sm text-gray-500">{{ app.applicationId }}</p>
+                    <p class="text-xs text-gray-400">Submitted: {{ formatDate(app.lastSyncAttempt || app.lastModified) }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  ✓ Sent
+                </span>
+                <button
+                  @click="deleteApplication(app.applicationId)"
+                  class="text-sm text-gray-600 hover:text-red-600 font-medium px-2 py-1 rounded border border-gray-300 hover:border-red-300"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Draft Applications -->
       <div v-if="applications.drafts.length > 0" class="bg-white rounded-lg shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">

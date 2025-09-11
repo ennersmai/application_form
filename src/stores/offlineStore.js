@@ -67,15 +67,17 @@ export const useOfflineStore = defineStore('offline', {
       if (!authStore.user) return
 
       try {
-        const [drafts, queued, failed] = await Promise.all([
+        const [drafts, queued, failed, synced] = await Promise.all([
           offlineService.getDrafts(authStore.user.id),
           offlineService.getQueued(authStore.user.id),
-          offlineService.getFailed(authStore.user.id)
+          offlineService.getFailed(authStore.user.id),
+          offlineService.getSynced(authStore.user.id)
         ])
 
         this.applications.drafts = drafts
         this.applications.queued = queued
         this.applications.failed = failed
+        this.applications.synced = synced
 
         // Update stats
         const stats = await offlineService.getStats(authStore.user.id)
