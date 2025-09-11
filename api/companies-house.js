@@ -12,11 +12,14 @@ export default async function handler(req, res) {
   try {
     const { companyNumber } = req.body
 
+    console.log('Companies House API called with:', { companyNumber, hasApiKey: !!API_KEY })
+
     if (!companyNumber) {
       return res.status(400).json({ error: 'Company number is required' })
     }
 
     if (!API_KEY) {
+      console.error('Companies House API key not found in environment')
       return res.status(500).json({ error: 'Companies House API key not configured' })
     }
 
@@ -35,13 +38,17 @@ export default async function handler(req, res) {
       }
     })
 
+    console.log('Making request to Companies House API for company:', cleanCompanyNumber)
+
     // Get basic company information
     const companyResponse = await companiesHouseApi.get(`/company/${cleanCompanyNumber}`)
     const company = companyResponse.data
+    console.log('Company data retrieved:', { companyNumber: company.company_number, companyName: company.company_name })
 
     // Get officers (directors) information
     const officersResponse = await companiesHouseApi.get(`/company/${cleanCompanyNumber}/officers`)
     const officers = officersResponse.data
+    console.log('Officers data retrieved:', { officerCount: officers.items?.length || 0 })
 
     const result = {
       success: true,
@@ -67,7 +74,13 @@ export default async function handler(req, res) {
     res.status(200).json(result)
 
   } catch (error) {
-    console.error('Companies House API error:', error)
+    console.error('Companies House API error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      stack: error.stack
+    })
 
     if (error.response?.status === 404) {
       return res.status(200).json({
@@ -87,7 +100,7 @@ export default async function handler(req, res) {
     } else {
       return res.status(500).json({
         success: false,
-        error: error.response?.data?.error || 'Failed to lookup company. Please try again.'
+        error: `Failed to lookup company: ${error.message}`
       })
     }
   }
