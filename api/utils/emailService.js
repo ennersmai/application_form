@@ -14,6 +14,9 @@ const EMAIL_CONFIG = {
   replyTo: process.env.EMAIL_REPLY_TO
 }
 
+// Optional: Preconfigured campaign to trigger via Sender.net Campaigns API
+const SENDER_CAMPAIGN_ID = process.env.SENDER_CAMPAIGN_ID
+
 async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   // Based on Sender.net API documentation, use transactional campaigns for one-off emails
   const possibleEndpoints = [
@@ -28,6 +31,19 @@ async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   
   let lastError = null
   
+  // Optional fast-path: trigger a prebuilt campaign if configured
+  if (SENDER_CAMPAIGN_ID) {
+    try {
+      console.log(`Trying Sender.net Campaign send for campaign ID: ${SENDER_CAMPAIGN_ID}`)
+      const sent = await attemptSendCampaign(SENDER_CAMPAIGN_ID)
+      if (sent.success) {
+        return sent
+      }
+    } catch (e) {
+      console.log('Campaign send attempt failed, falling back to API send flow:', e.message)
+    }
+  }
+
   for (const endpoint of possibleEndpoints) {
     try {
       console.log(`Trying Sender.net endpoint: ${endpoint}`)
@@ -66,6 +82,33 @@ async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
     service: 'fallback-logging',
     warning: 'Email service unavailable - check logs for email content'
   }
+}
+
+// Trigger a preconfigured campaign by ID via Sender.net Campaigns API
+async function attemptSendCampaign(campaignId) {
+  if (!campaignId) throw new Error('Campaign ID not provided')
+  if (!SENDER_CONFIG.apiToken) throw new Error('Sender.net API token not configured')
+
+  const url = `https://api.sender.net/v2/campaigns/${encodeURIComponent(campaignId)}/send`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
+
+  const bodyText = await response.text()
+  let body
+  try { body = JSON.parse(bodyText) } catch { body = { message: bodyText } }
+  console.log('Sender.net campaign send status:', response.status, body)
+
+  if (!response.ok || body?.success === false) {
+    throw new Error(body?.message || `Campaign send failed with status ${response.status}`)
+  }
+
+  return { success: true, message: body?.message || 'Campaign started to send', service: 'sender-campaign' }
 }
 
 async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
