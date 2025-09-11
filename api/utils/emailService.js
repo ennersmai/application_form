@@ -156,11 +156,6 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       emailPayload.to = `${EMAIL_CONFIG.to}, ${EMAIL_CONFIG.cc}`
     }
 
-    // Add reply-to
-    if (EMAIL_CONFIG.replyTo || user.email) {
-      emailPayload.reply_to = EMAIL_CONFIG.replyTo || user.email
-    }
-
     // Add PDF attachment if available
     if (pdfBuffer) {
       emailPayload.attachments = [{
@@ -193,7 +188,7 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     // TEMPORARY: Let's also try the exact format that worked in Postman
     const postmanPayload = {
       "from": "james@thepaymentsexpert.com",
-      "to": "James@ecrlimited.co.uk", // Replace with your test email
+      "to": "your-test-email@gmail.com", // Replace with your test email
       "subject": "API Test from Code",
       "html": "<h1>Test from code</h1>",
       "editor": "html"
