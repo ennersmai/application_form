@@ -4,9 +4,9 @@
       <!-- Logo/Header -->
       <div>
         <div class="flex justify-center mb-4">
-          <img 
-            src="/images/the_payments_expert.png" 
-            alt="The Payments Expert" 
+          <img
+            :src="logoUrl"
+            alt="The Payments Expert"
             class="h-16 sm:h-20 md:h-24 w-auto"
             @error="handleLogoError"
           />
@@ -137,6 +137,7 @@ const credentials = ref({
 const loading = computed(() => authStore.loading)
 const error = ref('')
 const isDevelopment = import.meta.env.DEV
+const logoUrl = computed(() => new URL('/images/the_payments_expert.png', import.meta.url).href)
 
 const toggleMode = () => {
   isSignUp.value = !isSignUp.value

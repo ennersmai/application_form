@@ -5,9 +5,9 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <img 
-              src="/images/the_payments_expert.png" 
-              alt="The Payments Expert" 
+            <img
+              :src="logoUrl"
+              alt="The Payments Expert"
               class="h-8 sm:h-10 w-auto"
               @error="handleLogoError"
             />
@@ -108,6 +108,7 @@ const offlineStore = useOfflineStore()
 const userName = computed(() => authStore.userName)
 const offlineCount = computed(() => offlineStore.totalPendingSync)
 const showFallbackText = ref(false)
+const logoUrl = computed(() => new URL('/images/the_payments_expert.png', import.meta.url).href)
 
 const handleLogout = async () => {
   await authStore.logout()
