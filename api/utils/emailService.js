@@ -223,13 +223,22 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       }
     }
     
-    console.log('REPLY_TO valid:', emailRegex.test(emailPayload.reply_to), emailPayload.reply_to)
+    console.log('REPLY_TO valid:', emailRegex.test(emailPayload.reply_to || ''), emailPayload.reply_to)
     console.log('=== END EMAIL VALIDATION ===')
     
     // If any email is invalid, throw a clear error
     if (!emailRegex.test(emailPayload.from)) {
       throw new Error(`Invalid FROM email format: ${emailPayload.from}`)
     }
+    
+    // Fix REPLY_TO if it's undefined/null/empty
+    if (!emailPayload.reply_to || emailPayload.reply_to === 'undefined' || !emailRegex.test(emailPayload.reply_to)) {
+      console.log('❌ REPLY_TO is invalid, forcing to FROM address')
+      emailPayload.reply_to = emailPayload.from
+      console.log('✅ Fixed REPLY_TO to:', emailPayload.reply_to)
+    }
+    
+    // Final validation of reply_to
     if (!emailRegex.test(emailPayload.reply_to)) {
       throw new Error(`Invalid REPLY_TO email format: ${emailPayload.reply_to}`)
     }
