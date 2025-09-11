@@ -19,28 +19,36 @@ export default async function handler(req, res) {
     }
 
     // Make request to GetAddress API using native fetch
-    const url = new URL(`${GETADDRESS_API_BASE}/find/${encodeURIComponent(query)}`)
+    // Try autocomplete endpoint first - /autocomplete/{query}?api-key={key}
+    const url = new URL(`${GETADDRESS_API_BASE}/autocomplete/${encodeURIComponent(query)}`)
     url.searchParams.append('api-key', API_KEY)
-    url.searchParams.append('expand', 'true')
+    url.searchParams.append('all', 'true')
     url.searchParams.append('top', top.toString())
 
+    console.log('GetAddress API URL:', url.toString())
+    
     const response = await fetch(url.toString(), {
       headers: {
         'Accept': 'application/json'
       }
     })
 
+    console.log('GetAddress API Response Status:', response.status, response.statusText)
+
     if (!response.ok) {
-      throw new Error(`GetAddress API error: ${response.status} ${response.statusText}`)
+      const errorText = await response.text()
+      console.log('GetAddress API Error Response:', errorText)
+      throw new Error(`GetAddress API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()
 
-    const suggestions = data.suggestions?.map(suggestion => ({
-      id: suggestion.id,
-      address: suggestion.address,
-      url: suggestion.url
-    })) || []
+    // GetAddress autocomplete returns an array of suggestions directly
+    const suggestions = Array.isArray(data.suggestions) ? data.suggestions.map((suggestion, index) => ({
+      id: suggestion.id || `addr_${index}`,
+      address: suggestion.address || suggestion.text || suggestion,
+      url: suggestion.url || null
+    })) : []
 
     res.status(200).json({
       success: true,
