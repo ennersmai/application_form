@@ -8,7 +8,7 @@ const SENDER_CONFIG = {
 }
 
 const EMAIL_CONFIG = {
-  from: process.env.EMAIL_FROM || 'applications@mail.sender.net',
+  from: process.env.EMAIL_FROM,
   to: process.env.EMAIL_TO, // James@ecrlimited.co.uk
   cc: process.env.EMAIL_CC, // Sean.palmer@ecrlimited.co.uk
   replyTo: process.env.EMAIL_REPLY_TO
