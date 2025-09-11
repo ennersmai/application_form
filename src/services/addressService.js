@@ -1,71 +1,51 @@
 import axios from 'axios'
 
-const GETADDRESS_API_BASE = 'https://api.getaddress.io'
-const API_KEY = import.meta.env.VITE_GETADDRESS_API_KEY
-
 export const addressService = {
   /**
-   * Look up addresses by postcode
-   * @param {string} postcode - UK postcode (e.g., "SW1A 1AA")
+   * Look up addresses by search query
+   * @param {string} query - Search query (postcode, street name, etc.)
    * @returns {Promise<Object>} Address lookup results
    */
-  async getAddresses(postcode) {
+  async getAddresses(query) {
     try {
-      // Clean and validate postcode
-      const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase()
-      
-      if (!this.validatePostcode(cleanPostcode)) {
+      if (!query || query.trim().length < 3) {
         return {
           success: false,
-          error: 'Please enter a valid UK postcode'
+          error: 'Please enter at least 3 characters to search'
         }
       }
 
-      // Format postcode for API (add space if needed)
-      const formattedPostcode = this.formatPostcode(cleanPostcode)
-      
-      const response = await axios.get(`${GETADDRESS_API_BASE}/find/${encodeURIComponent(formattedPostcode)}`, {
-        params: {
-          'api-key': API_KEY,
-          expand: true
-        }
+      const response = await axios.post('/api/address-lookup', {
+        query: query.trim(),
+        top: 10
       })
 
-      if (response.data && response.data.addresses) {
+      if (response.data.success && response.data.data.suggestions) {
         return {
           success: true,
           data: {
-            postcode: formattedPostcode,
-            addresses: response.data.addresses.map(addr => ({
-              line1: addr.line_1 || '',
-              line2: addr.line_2 || '',
-              line3: addr.line_3 || '',
-              locality: addr.locality || '',
-              city: addr.town_or_city || '',
-              county: addr.county || '',
-              country: 'United Kingdom',
-              formatted: this.formatAddress(addr)
+            addresses: response.data.data.suggestions.map(suggestion => ({
+              id: suggestion.id,
+              formatted: suggestion.address,
+              line1: suggestion.address.split(',')[0]?.trim() || '',
+              city: suggestion.address.split(',')[1]?.trim() || '',
+              country: 'United Kingdom'
             }))
           }
         }
       } else {
         return {
           success: false,
-          error: 'No addresses found for this postcode'
+          error: 'No addresses found for this search'
         }
       }
     } catch (error) {
       console.error('Address lookup error:', error)
-      
+
       if (error.response?.status === 404) {
         return {
           success: false,
-          error: 'Postcode not found. Please check and try again.'
-        }
-      } else if (error.response?.status === 401) {
-        return {
-          success: false,
-          error: 'Address lookup service is unavailable.'
+          error: 'Address not found. Please check and try again.'
         }
       } else if (error.response?.status === 429) {
         return {
@@ -75,7 +55,7 @@ export const addressService = {
       } else {
         return {
           success: false,
-          error: 'Address lookup failed. Please try again or enter manually.'
+          error: error.response?.data?.error || 'Address lookup failed. Please try again or enter manually.'
         }
       }
     }
