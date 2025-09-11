@@ -100,6 +100,10 @@ export const syncService = {
         console.log(`Successfully submitted application ${application.applicationId}`)
       } else {
         const errorData = await response.json().catch(() => ({}))
+        console.error('Submission failed with details:', errorData)
+        if (errorData.details && Array.isArray(errorData.details)) {
+          console.error('Validation errors:', errorData.details)
+        }
         throw new Error(`Server returned status ${response.status}: ${errorData.error || response.statusText}`)
       }
     } catch (error) {

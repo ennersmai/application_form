@@ -179,7 +179,9 @@ function isValidEmail(email) {
 
 function isValidUKPostcode(postcode) {
   if (!postcode) return false
-  const ukPostcodeRegex = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i
+  // More comprehensive UK postcode regex that handles all valid formats
+  // Formats: A9 9AA, A99 9AA, AA9 9AA, AA99 9AA, A9A 9AA, AA9A 9AA
+  const ukPostcodeRegex = /^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\s?[0-9][A-Z]{2}$/i
   return ukPostcodeRegex.test(postcode.trim())
 }
 
