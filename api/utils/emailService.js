@@ -30,17 +30,33 @@ async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
 
   const { html, text } = generateEmailContent(applicationData)
 
-  const recipients = []
-  recipients.push({ email: EMAIL_CONFIG.to })
+  // Build To list (support comma-separated EMAIL_TO)
+  const toList = (EMAIL_CONFIG.to || '')
+    .split(',')
+    .map(e => e.trim())
+    .filter(Boolean)
+    .map(email => ({ email }))
+
+  // Build CC list including configured CCs and the current agent (user) email
+  const ccList = []
   if (EMAIL_CONFIG.cc) {
-    const ccList = EMAIL_CONFIG.cc.split(',').map(e => e.trim()).filter(Boolean)
-    for (const cc of ccList) recipients.push({ email: cc })
+    const ccParts = EMAIL_CONFIG.cc.split(',').map(e => e.trim()).filter(Boolean)
+    for (const cc of ccParts) ccList.push({ email: cc })
+  }
+  if (user?.email) {
+    const lowerTo = new Set(toList.map(r => r.email.toLowerCase()))
+    const lowerCc = new Set(ccList.map(r => r.email.toLowerCase()))
+    const agentEmailLower = user.email.toLowerCase()
+    if (!lowerTo.has(agentEmailLower) && !lowerCc.has(agentEmailLower)) {
+      ccList.push({ email: user.email })
+    }
   }
 
   const payload = {
     personalizations: [
       {
-        to: recipients,
+        to: toList,
+        cc: ccList.length ? ccList : undefined,
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`
       }
     ],
@@ -145,35 +161,7 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       }]
     }
 
-    console.log('=== DEBUGGING SENDER.NET REQUEST ===')
-    console.log('API URL:', apiUrl)
-    console.log('API Token (first 10 chars):', SENDER_CONFIG.apiToken?.substring(0, 10) + '...')
-    console.log('API Token (last 10 chars):', '...' + SENDER_CONFIG.apiToken?.substring(SENDER_CONFIG.apiToken.length - 10))
-    console.log('API Token length:', SENDER_CONFIG.apiToken?.length)
-    console.log('FROM email:', EMAIL_CONFIG.from)
-    console.log('TO email:', EMAIL_CONFIG.to)
-    console.log('Environment variables:')
-    console.log('- EMAIL_FROM:', process.env.EMAIL_FROM)
-    console.log('- EMAIL_TO:', process.env.EMAIL_TO) 
-    console.log('- SENDER_API_TOKEN length:', process.env.SENDER_API_TOKEN?.length)
-    
-    // Log the EXACT payload being sent
-    console.log('EXACT PAYLOAD BEING SENT:')
-    console.log(JSON.stringify(emailPayload, null, 2))
-    
-    // Log the EXACT headers being sent
-    const headers = {
-      'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-    console.log('EXACT HEADERS BEING SENT:')
-    console.log(JSON.stringify(headers, null, 2))
-    // Validate all email addresses are properly formatted
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    
-    console.log('=== EMAIL VALIDATION ===')
-    console.log('FROM valid:', emailRegex.test(emailPayload.from), emailPayload.from)
+   
     
     // Handle TO field validation (might be string or array)
     if (Array.isArray(emailPayload.to)) {
@@ -347,6 +335,7 @@ function generateEmailContent(data) {
               <div><span class="key">Position:</span> <span class="value">${formatPosition(principal.position)}</span></div>
               <div><span class="key">Ownership:</span> <span class="value">${principal.ownershipPercentage}%</span></div>
             </div>
+            <p><span class="key">Home Address:</span> <span class="value">${formatAddress(principal.homeAddress)}</span></p>
             ${principal.ownershipPercentage > 25 ? '<p style="color: #dc2626; font-size: 12px;">⚠️ Beneficial Owner (>25% ownership)</p>' : ''}
           </div>
         `).join('')}
@@ -454,6 +443,7 @@ Principal ${index + 1}:
   Phone: ${principal.phone}
   Position: ${formatPosition(principal.position)}
   Ownership: ${principal.ownershipPercentage}%
+  Home Address: ${formatAddress(principal.homeAddress)}
   ${principal.ownershipPercentage > 25 ? '  Status: Beneficial Owner (>25%)' : ''}
 `).join('')}
 

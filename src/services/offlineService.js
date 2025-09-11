@@ -29,6 +29,32 @@ export const APPLICATION_STATUS = {
 
 export const offlineService = {
   /**
+   * Remove duplicate rows for the same applicationId, keeping the most recent by lastModified/createdAt
+   */
+  async _dedupeApplication(applicationId) {
+    try {
+      const all = await db.applications
+        .where('applicationId')
+        .equals(applicationId)
+        .toArray()
+
+      if (all.length <= 1) return
+
+      // Sort by lastModified or createdAt desc
+      const sorted = all.sort((a, b) => {
+        const aTime = new Date(a.lastModified || a.createdAt || 0).getTime()
+        const bTime = new Date(b.lastModified || b.createdAt || 0).getTime()
+        return bTime - aTime
+      })
+
+      const keep = sorted[0]
+      const toDelete = sorted.slice(1)
+      await Promise.all(toDelete.map(row => db.applications.delete(row.id)))
+    } catch (e) {
+      console.warn('Deduplication failed for application:', applicationId, e)
+    }
+  },
+  /**
    * Save application as draft (auto-save while editing)
    * @param {Object} formData - Complete form data from formStore
    * @param {string} agentId - Current user ID
@@ -58,9 +84,11 @@ export const offlineService = {
           formData: applicationData.formData,
           lastModified: applicationData.lastModified
         })
+        await this._dedupeApplication(formData.applicationId)
         return { ...existing, ...applicationData }
       } else {
         const id = await db.applications.add(applicationData)
+        await this._dedupeApplication(formData.applicationId)
         return { ...applicationData, id }
       }
     } catch (error) {
@@ -95,9 +123,11 @@ export const offlineService = {
 
       if (existing) {
         await db.applications.update(existing.id, applicationData)
+        await this._dedupeApplication(formData.applicationId)
         return { ...existing, ...applicationData }
       } else {
         const id = await db.applications.add(applicationData)
+        await this._dedupeApplication(formData.applicationId)
         return { ...applicationData, id }
       }
     } catch (error) {
@@ -209,18 +239,19 @@ export const offlineService = {
    */
   async updateApplicationStatus(applicationId, status, syncError = null) {
     try {
-      const application = await db.applications
+      const matches = await db.applications
         .where('applicationId')
         .equals(applicationId)
-        .first()
+        .toArray()
 
-      if (application) {
-        await db.applications.update(application.id, {
-          status,
-          lastSyncAttempt: new Date().toISOString(),
-          syncError
-        })
-      }
+      const now = new Date().toISOString()
+      await Promise.all(matches.map(row => db.applications.update(row.id, {
+        status,
+        lastSyncAttempt: now,
+        syncError
+      })))
+
+      await this._dedupeApplication(applicationId)
     } catch (error) {
       console.error('Error updating application status:', error)
       throw new Error('Failed to update application status')

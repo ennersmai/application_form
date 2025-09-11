@@ -88,14 +88,15 @@ export const syncService = {
       })
 
       if (response.ok) {
-        // Success - mark as synced and optionally delete from local storage
+        // Success - mark as synced and remove any draft duplicates
         await offlineService.updateApplicationStatus(
           application.applicationId,
           APPLICATION_STATUS.SYNCED
         )
-        
-        // Keep synced applications for user reference, but they won't appear in drafts
-        
+
+        // After marking as SYNCED, ensure only the latest record remains
+        // (offlineService.updateApplicationStatus already dedupes)
+
         console.log(`Successfully submitted application ${application.applicationId}`)
       } else {
         const errorData = await response.json().catch(() => ({}))
