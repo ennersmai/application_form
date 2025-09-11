@@ -23,8 +23,6 @@ const SENDER_WEBHOOK_TOKEN = process.env.SENDER_WEBHOOK_TOKEN
 async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   // Based on Sender.net API documentation, use transactional campaigns for one-off emails
   const possibleEndpoints = [
-    // Standard send endpoint (often available on non-transactional plans)
-    'https://api.sender.net/v2/emails/send',
     // Transactional endpoints (may require higher plan/permissions)
     'https://api.sender.net/v2/transactional',
     'https://api.sender.net/v2/transactional/send',
@@ -163,16 +161,6 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
         html: emailContent.html,
         text: emailContent.text,
         editor: "html" // Required by Sender.net transactional API
-      }
-    } else if (apiUrl.includes('/emails/send')) {
-      // Standard send API expects: to (array of emails), from (string), subject, html/text
-      emailPayload = {
-        to: recipientsArray,
-        from: EMAIL_CONFIG.from,
-        reply_to: EMAIL_CONFIG.replyTo || user.email,
-        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
-        html: emailContent.html,
-        text: emailContent.text
       }
     } else {
       // Standard email format
