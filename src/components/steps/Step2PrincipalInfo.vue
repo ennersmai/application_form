@@ -489,7 +489,7 @@ const lookupHomeAddress = async (principalId) => {
       // Format addresses for display and selection
       lookupState.value[principalId].addresses = result.data.addresses.map(addr => ({
         ...addr,
-        formatted_address: addr.formatted || addr.address
+        formatted_address: addr.formatted
       }))
 
       if (result.data.addresses.length === 0) {
