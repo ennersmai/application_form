@@ -125,9 +125,8 @@ function validateApplicationData(data) {
             }
           }
         })
-        
+
         // Validate total monthly cost - only if there are devices with quantity > 0
-        const hasSelectedDevices = deviceEntries.some(([_, device]) => device.quantity > 0)
         if (hasSelectedDevices && (typeof data.pricing.totalMonthlyCost !== 'number' || data.pricing.totalMonthlyCost <= 0)) {
           errors.push('Total monthly cost must be greater than 0')
         }
