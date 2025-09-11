@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 export const companiesHouseService = {
   /**
    * Look up company by company number
@@ -8,20 +6,31 @@ export const companiesHouseService = {
    */
   async getCompanyDetails(companyNumber) {
     try {
-      const response = await axios.post('/api/companies-house', {
-        companyNumber: companyNumber
+      const response = await fetch('/api/companies-house', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          companyNumber: companyNumber
+        })
       })
 
-      return response.data
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
     } catch (error) {
       console.error('Companies House API error:', error)
 
-      if (error.response?.status === 404) {
+      if (error.message?.includes('404')) {
         return {
           success: false,
           error: 'Company not found. Please check the company number and try again.'
         }
-      } else if (error.response?.status === 429) {
+      } else if (error.message?.includes('429')) {
         return {
           success: false,
           error: 'Too many requests. Please wait a moment and try again.'
@@ -29,7 +38,7 @@ export const companiesHouseService = {
       } else {
         return {
           success: false,
-          error: error.response?.data?.error || 'Failed to lookup company. Please try again.'
+          error: error.message || 'Failed to lookup company. Please try again.'
         }
       }
     }

@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 export const addressService = {
   /**
    * Look up addresses by search query
@@ -15,16 +13,28 @@ export const addressService = {
         }
       }
 
-      const response = await axios.post('/api/address-lookup', {
-        query: query.trim(),
-        top: 10
+      const response = await fetch('/api/address-lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: query.trim(),
+          top: 10
+        })
       })
 
-      if (response.data.success && response.data.data.suggestions) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.success && data.data.suggestions) {
         return {
           success: true,
           data: {
-            addresses: response.data.data.suggestions.map(suggestion => ({
+            addresses: data.data.suggestions.map(suggestion => ({
               id: suggestion.id,
               formatted: suggestion.address,
               line1: suggestion.address.split(',')[0]?.trim() || '',
@@ -55,7 +65,7 @@ export const addressService = {
       } else {
         return {
           success: false,
-          error: error.response?.data?.error || 'Address lookup failed. Please try again or enter manually.'
+          error: error.message || 'Address lookup failed. Please try again or enter manually.'
         }
       }
     }

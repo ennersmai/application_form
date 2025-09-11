@@ -1,4 +1,4 @@
-import axios from 'axios'
+// Using native fetch instead of axios
 import { offlineService, APPLICATION_STATUS } from './offlineService'
 import { supabase } from './supabase'
 
@@ -74,19 +74,20 @@ export const syncService = {
         throw new Error('No valid session token')
       }
 
-      // Submit to backend API
-      const response = await axios.post('/api/submit-application', {
-        applicationData: application.formData,
-        applicationId: application.applicationId
-      }, {
+      // Submit to backend API using native fetch
+      const response = await fetch('/api/submit-application', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000 // 30 second timeout
+        body: JSON.stringify({
+          applicationData: application.formData,
+          applicationId: application.applicationId
+        })
       })
 
-      if (response.status === 201 || response.status === 200) {
+      if (response.ok) {
         // Success - mark as synced and optionally delete from local storage
         await offlineService.updateApplicationStatus(
           application.applicationId,
@@ -98,7 +99,8 @@ export const syncService = {
         
         console.log(`Successfully submitted application ${application.applicationId}`)
       } else {
-        throw new Error(`Server returned status ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(`Server returned status ${response.status}: ${errorData.error || response.statusText}`)
       }
     } catch (error) {
       console.error(`Failed to submit application ${application.applicationId}:`, error)
@@ -106,9 +108,7 @@ export const syncService = {
       // Update status to failed with error message
       let errorMessage = 'Submission failed'
       
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error
-      } else if (error.message) {
+      if (error.message) {
         errorMessage = error.message
       }
       
