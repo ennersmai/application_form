@@ -94,8 +94,7 @@ export const syncService = {
           APPLICATION_STATUS.SYNCED
         )
         
-        // Delete synced applications to keep drafts clean
-        await offlineService.deleteApplication(application.applicationId)
+        // Keep synced applications for user reference, but they won't appear in drafts
         
         console.log(`Successfully submitted application ${application.applicationId}`)
       } else {
