@@ -5,7 +5,7 @@
       <div>
         <div class="flex justify-center mb-4">
           <img 
-            src="/images/the_payments_expert.png" 
+            src="images/the_payments_expert.png" 
             alt="The Payments Expert" 
             class="h-16 sm:h-20 md:h-24 w-auto"
             @error="handleLogoError"

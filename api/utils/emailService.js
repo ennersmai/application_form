@@ -1,71 +1,86 @@
-import nodemailer from 'nodemailer'
+import axios from 'axios'
 
-// Email configuration - these will be set as Vercel environment variables
-const SMTP_CONFIG = {
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD
-  }
+// Sender.net API configuration
+const SENDER_CONFIG = {
+  apiUrl: 'https://api.sender.net/v2',
+  apiToken: process.env.SENDER_API_TOKEN
 }
 
 const EMAIL_CONFIG = {
-  from: process.env.EMAIL_FROM || process.env.SMTP_USER,
-  to: process.env.EMAIL_TO, // Back-office email
-  cc: process.env.EMAIL_CC, // Optional CC recipients
+  from: process.env.EMAIL_FROM || 'applications@mail.sender.net',
+  to: process.env.EMAIL_TO, // James@ecrlimited.co.uk
+  cc: process.env.EMAIL_CC, // Sean.palmer@ecrlimited.co.uk
   replyTo: process.env.EMAIL_REPLY_TO
 }
 
 export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   try {
-    // Validate email configuration
+    // Validate configuration
+    if (!SENDER_CONFIG.apiToken) {
+      throw new Error('Sender.net API token not configured')
+    }
     if (!EMAIL_CONFIG.to) {
       throw new Error('Email destination not configured')
     }
 
-    // Create transporter
-    const transporter = nodemailer.createTransporter(SMTP_CONFIG)
-
-    // Verify SMTP connection
-    await transporter.verify()
-
     // Prepare email content
     const emailContent = generateEmailContent(applicationData)
     
-    // Email options
-    const mailOptions = {
-      from: EMAIL_CONFIG.from,
-      to: EMAIL_CONFIG.to,
-      cc: EMAIL_CONFIG.cc,
-      replyTo: EMAIL_CONFIG.replyTo || user.email,
+    // Prepare recipients
+    const recipients = [EMAIL_CONFIG.to]
+    if (EMAIL_CONFIG.cc) {
+      recipients.push(EMAIL_CONFIG.cc)
+    }
+
+    // Prepare Sender.net API payload
+    const emailPayload = {
+      to: recipients,
+      from: {
+        email: EMAIL_CONFIG.from,
+        name: 'Agent Application System'
+      },
+      reply_to: EMAIL_CONFIG.replyTo || user.email,
       subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
       html: emailContent.html,
-      text: emailContent.text,
-      attachments: []
+      text: emailContent.text
     }
 
     // Add PDF attachment if available
     if (pdfBuffer) {
-      mailOptions.attachments.push({
+      emailPayload.attachments = [{
         filename: `Application-${applicationData.applicationId}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      })
+        content: pdfBuffer.toString('base64'),
+        type: 'application/pdf'
+      }]
     }
 
-    // Send email
-    const info = await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully:', info.messageId)
+    // Send via Sender.net API
+    const response = await axios.post(`${SENDER_CONFIG.apiUrl}/send`, emailPayload, {
+      headers: {
+        'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    })
 
-    return {
-      success: true,
-      messageId: info.messageId
+    if (response.status === 200 || response.status === 201) {
+      console.log('Email sent successfully via Sender.net:', response.data)
+      return {
+        success: true,
+        messageId: response.data.message_id || response.data.id
+      }
+    } else {
+      throw new Error(`Sender.net API returned status ${response.status}`)
     }
 
   } catch (error) {
-    console.error('Email service error:', error)
+    console.error('Sender.net email error:', error)
+    
+    // Handle specific Sender.net errors
+    if (error.response?.data) {
+      throw new Error(`Sender.net API error: ${error.response.data.message || error.response.data.error}`)
+    }
+    
     throw new Error(`Failed to send email: ${error.message}`)
   }
 }

@@ -114,3 +114,6 @@ supabase/config.toml
 # API keys and secrets (additional safety)
 **/api-keys.*
 **/secrets.*
+
+# Development instructions (contains sensitive credentials)
+dev_instructions.md
