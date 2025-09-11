@@ -1,8 +1,9 @@
 // Using native fetch instead of axios
 
 // Sender.net API configuration
+// Try multiple endpoint patterns to find the correct one
 const SENDER_CONFIG = {
-  apiUrl: 'https://api.sender.net/v2',
+  apiUrl: process.env.SENDER_API_URL || 'https://api.sender.net/v2/emails/send',
   apiToken: process.env.SENDER_API_TOKEN
 }
 
@@ -14,6 +15,38 @@ const EMAIL_CONFIG = {
 }
 
 export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
+  // Based on Sender.net API documentation, use transactional campaigns for one-off emails
+  const possibleEndpoints = [
+    'https://api.sender.net/v2/transactional',
+    'https://api.sender.net/v2/transactional/send',
+    'https://api.sender.net/v2/emails/transactional',
+    'https://api.sender.net/v2/campaigns/transactional'
+  ]
+  
+  let lastError = null
+  
+  for (const endpoint of possibleEndpoints) {
+    try {
+      console.log(`Trying Sender.net endpoint: ${endpoint}`)
+      const result = await attemptSendEmail(endpoint, applicationData, pdfBuffer, user)
+      if (result.success) {
+        console.log(`Success with endpoint: ${endpoint}`)
+        return result
+      }
+    } catch (error) {
+      console.log(`Failed with endpoint ${endpoint}:`, error.message)
+      lastError = error
+      if (!error.message.includes('404')) {
+        // If it's not a 404, this might be the right endpoint with a different issue
+        throw error
+      }
+    }
+  }
+  
+  throw lastError || new Error('All Sender.net endpoints failed')
+}
+
+async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
   try {
     // Validate configuration
     if (!SENDER_CONFIG.apiToken) {
@@ -26,23 +59,43 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
     // Prepare email content
     const emailContent = generateEmailContent(applicationData)
     
-    // Prepare recipients
-    const recipients = [EMAIL_CONFIG.to]
+    // Prepare recipients for transactional email (try both formats)
+    const recipientsArray = [EMAIL_CONFIG.to]
     if (EMAIL_CONFIG.cc) {
-      recipients.push(EMAIL_CONFIG.cc)
+      recipientsArray.push(EMAIL_CONFIG.cc)
     }
+    
+    // Also prepare object format for APIs that need it
+    const recipientsObjects = recipientsArray.map(email => ({ email }))
 
-    // Prepare Sender.net API payload
-    const emailPayload = {
-      to: recipients,
-      from: {
-        email: EMAIL_CONFIG.from,
-        name: 'Agent Application System'
-      },
-      reply_to: EMAIL_CONFIG.replyTo || user.email,
-      subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
-      html: emailContent.html,
-      text: emailContent.text
+    // Try different payload formats for different endpoints
+    let emailPayload
+    if (apiUrl.includes('transactional')) {
+      // Transactional email format
+      emailPayload = {
+        to: recipientsObjects,
+        from: {
+          email: EMAIL_CONFIG.from,
+          name: 'Agent Application System'
+        },
+        reply_to: EMAIL_CONFIG.replyTo || user.email,
+        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
+        html: emailContent.html,
+        text: emailContent.text
+      }
+    } else {
+      // Standard email format
+      emailPayload = {
+        to: recipientsArray,
+        from: {
+          email: EMAIL_CONFIG.from,
+          name: 'Agent Application System'
+        },
+        reply_to: EMAIL_CONFIG.replyTo || user.email,
+        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
+        html: emailContent.html,
+        text: emailContent.text
+      }
     }
 
     // Add PDF attachment if available
@@ -55,14 +108,23 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
     }
 
     // Send via Sender.net API using native fetch
-    const response = await fetch(`${SENDER_CONFIG.apiUrl}/send`, {
+    const url = apiUrl
+    console.log('Sender.net API URL:', url)
+    console.log('Sender.net API Token exists:', !!SENDER_CONFIG.apiToken)
+    console.log('Email payload:', JSON.stringify(emailPayload, null, 2))
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(emailPayload)
     })
+    
+    console.log('Sender.net response status:', response.status)
+    console.log('Sender.net response headers:', Object.fromEntries(response.headers))
 
     if (response.ok) {
       const data = await response.json()
