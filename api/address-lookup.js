@@ -1,4 +1,4 @@
-import axios from 'axios'
+const axios = require('axios')
 
 const GETADDRESS_API_BASE = 'https://api.getaddress.io'
 const API_KEY = process.env.GETADDRESS_API_KEY
