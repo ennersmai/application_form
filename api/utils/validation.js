@@ -101,8 +101,8 @@ function validateApplicationData(data) {
       if (data.pricing.devicePricing && typeof data.pricing.devicePricing === 'object') {
         const deviceEntries = Object.entries(data.pricing.devicePricing)
         
-        // Check if at least one device has quantity > 0
-        const hasSelectedDevices = deviceEntries.some(([_, device]) => device.quantity > 0)
+        // Check if at least one device has quantity > 0 (coerce numeric strings)
+        const hasSelectedDevices = deviceEntries.some(([_, device]) => Number(device?.quantity) > 0)
         if (!hasSelectedDevices) {
           errors.push('At least one device must be selected for pricing')
         }
@@ -111,12 +111,15 @@ function validateApplicationData(data) {
           const prefix = `Device ${deviceId}`
 
           // Only validate devices with quantity > 0
-          if (device.quantity > 0) {
-            if (typeof device.quantity !== 'number' || device.quantity <= 0) {
+          const quantityNumber = Number(device?.quantity)
+          const monthlyPriceNumber = Number(device?.monthlyPrice)
+
+          if (quantityNumber > 0) {
+            if (!Number.isFinite(quantityNumber) || quantityNumber <= 0) {
               errors.push(`${prefix}: Quantity must be greater than 0`)
             }
 
-            if (typeof device.monthlyPrice !== 'number' || device.monthlyPrice <= 0) {
+            if (!Number.isFinite(monthlyPriceNumber) || monthlyPriceNumber <= 0) {
               errors.push(`${prefix}: Monthly price must be a positive number`)
             }
 
@@ -127,7 +130,8 @@ function validateApplicationData(data) {
         })
 
         // Validate total monthly cost - only if there are devices with quantity > 0
-        if (hasSelectedDevices && (typeof data.pricing.totalMonthlyCost !== 'number' || data.pricing.totalMonthlyCost <= 0)) {
+        const totalMonthlyCostNumber = Number(data.pricing.totalMonthlyCost)
+        if (hasSelectedDevices && (!Number.isFinite(totalMonthlyCostNumber) || totalMonthlyCostNumber <= 0)) {
           errors.push('Total monthly cost must be greater than 0')
         }
       } else {
