@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export const useUiStore = defineStore('ui', {
   state: () => ({
     currentStep: 0,
-    totalSteps: 9, // Steps 0-8
+    totalSteps: 8, // Steps 0-7
     isSubmitting: false,
     globalError: null,
     stepValidation: {
@@ -12,10 +12,9 @@ export const useUiStore = defineStore('ui', {
       2: false, // Principals
       3: false, // Business Info
       4: false, // Trading Info
-      5: false, // Pricing
-      6: false, // Equipment
-      7: false, // Banking
-      8: false  // Review
+      5: false, // Pricing (includes equipment)
+      6: false, // Banking
+      7: false  // Review
     }
   }),
 
@@ -28,8 +27,7 @@ export const useUiStore = defineStore('ui', {
         'Principal Information',
         'Business Information',
         'Trading Information',
-        'Pricing',
-        'Equipment',
+        'Equipment Pricing',
         'Banking Details',
         'Review & Submit'
       ]

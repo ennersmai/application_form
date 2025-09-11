@@ -195,8 +195,9 @@
         >
           <div>
             <span class="font-medium">{{ device.name }}</span>
-            <span class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ device.monthlyPrice.toFixed(2) }}/month)</span>
-            <span v-if="device.pricingType === 'promo'" class="text-xs text-green-600 ml-1">[Promotional]</span>
+            <span v-if="device.contractType === 'purchase'" class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ device.monthlyPrice.toFixed(2) }} one-time)</span>
+            <span v-else class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ device.monthlyPrice.toFixed(2) }}/month)</span>
+            <span v-if="device.contractType === 'promo'" class="text-xs text-green-600 ml-1">[6 months @ £1]</span>
           </div>
           <span class="font-medium">£{{ device.totalMonthly.toFixed(2) }}/month</span>
         </div>
@@ -260,7 +261,7 @@
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-medium text-gray-900">Banking Details</h3>
         <button
-          @click="editSection(7)"
+          @click="editSection(6)"
           class="text-sm text-primary-600 hover:text-primary-700 font-medium"
         >
           Edit
@@ -388,7 +389,7 @@ const selectedPricingDevices = computed(() => {
           name: equipmentItem.name,
           quantity: pricing.quantity,
           monthlyPrice: pricing.monthlyPrice,
-          pricingType: pricing.pricingType,
+          contractType: pricing.contractType,
           totalMonthly: pricing.quantity * pricing.monthlyPrice
         })
       }
@@ -463,21 +464,21 @@ const formatSortCode = (sortCode) => {
 
 const updateConfirmation = () => {
   // Update validation when confirmation changes
-  uiStore.setStepValid(8, isStepValid.value)
+  uiStore.setStepValid(7, isStepValid.value)
 }
 
 // Watchers
 watch(isStepValid, (newValue) => {
-  uiStore.setStepValid(8, newValue)
+  uiStore.setStepValid(7, newValue)
 })
 
 // Show validation errors after user tries to proceed
 watch(() => uiStore.currentStep, (newStep, oldStep) => {
-  if (oldStep === 8 && newStep !== 8) {
+  if (oldStep === 7 && newStep !== 7) {
     showValidation.value = true
   }
 })
 
 // Initialize validation
-uiStore.setStepValid(8, isStepValid.value)
+uiStore.setStepValid(7, isStepValid.value)
 </script>
