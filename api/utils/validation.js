@@ -38,6 +38,19 @@ export function validateApplicationData(data) {
         if (typeof principal.ownershipPercentage !== 'number' || principal.ownershipPercentage < 0 || principal.ownershipPercentage > 100) {
           errors.push(`${prefix}: Ownership percentage must be between 0 and 100`)
         }
+        
+        // Validate home address
+        if (!principal.homeAddress) {
+          errors.push(`${prefix}: Home address is required`)
+        } else {
+          const addr = principal.homeAddress
+          if (!addr.line1) errors.push(`${prefix}: Home address line 1 is required`)
+          if (!addr.city) errors.push(`${prefix}: Home address city is required`)
+          if (!addr.postcode) errors.push(`${prefix}: Home address postcode is required`)
+          if (addr.postcode && !isValidUKPostcode(addr.postcode)) {
+            errors.push(`${prefix}: Invalid home address postcode format`)
+          }
+        }
       })
 
       // Validate total ownership for multiple principals
@@ -84,17 +97,48 @@ export function validateApplicationData(data) {
 
     // Validate pricing
     if (data.pricing) {
-      if (typeof data.pricing.consumerDebit !== 'number' || data.pricing.consumerDebit < 0.25) {
-        errors.push('Consumer debit rate must be at least 0.25%')
-      }
-      if (typeof data.pricing.consumerCredit !== 'number' || data.pricing.consumerCredit < 0.43) {
-        errors.push('Consumer credit rate must be at least 0.43%')
-      }
-      if (typeof data.pricing.commercialCard !== 'number' || data.pricing.commercialCard < 1.6) {
-        errors.push('Commercial card rate must be at least 1.6%')
-      }
-      if (typeof data.pricing.authorisationFee !== 'number' || data.pricing.authorisationFee < 0.01) {
-        errors.push('Authorization fee must be at least £0.01')
+      // Validate device pricing (new structure)
+      if (data.pricing.devicePricing && typeof data.pricing.devicePricing === 'object') {
+        const deviceEntries = Object.entries(data.pricing.devicePricing)
+        
+        if (deviceEntries.length === 0) {
+          errors.push('At least one device must be selected for pricing')
+        }
+        
+        deviceEntries.forEach(([deviceId, device]) => {
+          const prefix = `Device ${deviceId}`
+          
+          if (typeof device.quantity !== 'number' || device.quantity <= 0) {
+            errors.push(`${prefix}: Quantity must be greater than 0`)
+          }
+          
+          if (typeof device.monthlyPrice !== 'number' || device.monthlyPrice < 0) {
+            errors.push(`${prefix}: Monthly price must be a positive number`)
+          }
+          
+          if (!device.contractType) {
+            errors.push(`${prefix}: Contract type is required`)
+          }
+        })
+        
+        // Validate total monthly cost
+        if (typeof data.pricing.totalMonthlyCost !== 'number' || data.pricing.totalMonthlyCost <= 0) {
+          errors.push('Total monthly cost must be greater than 0')
+        }
+      } else {
+        // Fallback to legacy pricing validation for backward compatibility
+        if (typeof data.pricing.consumerDebit !== 'number' || data.pricing.consumerDebit < 0.25) {
+          errors.push('Consumer debit rate must be at least 0.25%')
+        }
+        if (typeof data.pricing.consumerCredit !== 'number' || data.pricing.consumerCredit < 0.43) {
+          errors.push('Consumer credit rate must be at least 0.43%')
+        }
+        if (typeof data.pricing.commercialCard !== 'number' || data.pricing.commercialCard < 1.6) {
+          errors.push('Commercial card rate must be at least 1.6%')
+        }
+        if (typeof data.pricing.authorisationFee !== 'number' || data.pricing.authorisationFee < 0.01) {
+          errors.push('Authorization fee must be at least £0.01')
+        }
       }
     }
 

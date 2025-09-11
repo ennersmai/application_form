@@ -65,6 +65,9 @@ export const useFormStore = defineStore('form', {
 
     // Step 5: Pricing
     pricing: {
+      devicePricing: {},  // Device-based pricing: { deviceId: { quantity, monthlyPrice, contractType } }
+      totalMonthlyCost: 0,
+      // Legacy fields for backward compatibility
       consumerDebit: 0.40,
       consumerCredit: 0.65,
       commercialCard: 2.00,
