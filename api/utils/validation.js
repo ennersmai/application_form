@@ -107,16 +107,33 @@ function validateApplicationData(data) {
           errors.push('At least one device must be selected for pricing')
         }
         
+        // Default monthly prices for devices (fallback if missing)
+        const defaultDevicePrices = {
+          'clover-flex': 25.00,
+          'clover-mini': 25.00,
+          'clover-station-duo': 40.00,
+          'clover-kitchen-printer': 252.99,
+          'clover-cash-drawer': 40.00
+        }
+
         deviceEntries.forEach(([deviceId, device]) => {
           const prefix = `Device ${deviceId}`
 
           // Only validate devices with quantity > 0
           const quantityNumber = Number(device?.quantity)
-          const monthlyPriceNumber = Number(device?.monthlyPrice)
+          let monthlyPriceNumber = Number(device?.monthlyPrice)
 
           if (quantityNumber > 0) {
             if (!Number.isFinite(quantityNumber) || quantityNumber <= 0) {
               errors.push(`${prefix}: Quantity must be greater than 0`)
+            }
+
+            // Fallback to default price for non-purchase contracts when price is missing/invalid
+            if ((!Number.isFinite(monthlyPriceNumber) || monthlyPriceNumber <= 0) && device.contractType !== 'purchase') {
+              const fallback = defaultDevicePrices[deviceId]
+              if (Number.isFinite(fallback) && fallback > 0) {
+                monthlyPriceNumber = fallback
+              }
             }
 
             if (!Number.isFinite(monthlyPriceNumber) || monthlyPriceNumber <= 0) {
