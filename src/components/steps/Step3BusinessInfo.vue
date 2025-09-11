@@ -82,7 +82,7 @@
       <!-- Postcode Lookup -->
       <div>
         <label for="postcode" class="block text-sm font-medium text-gray-700 mb-2">
-          Postcode *
+          Lookup Postcode *
         </label>
         <div class="flex space-x-2">
           <input
@@ -111,7 +111,7 @@
           </div>
         </div>
         <p v-if="postcodeError" class="mt-1 text-sm text-red-600">{{ postcodeError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Enter postcode to lookup addresses</p>
+        <p v-else class="mt-1 text-sm text-gray-500">Enter postcode to find and select your address</p>
       </div>
 
       <!-- Address Selection -->
