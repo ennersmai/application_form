@@ -168,14 +168,8 @@ import { equipmentData } from '@/data/equipmentData'
 const formStore = useFormStore()
 const uiStore = useUiStore()
 
-// Filter only devices (exclude accessories)
-const availableDevices = computed(() => 
-  equipmentData.filter(item => 
-    item.category === 'countertop' || 
-    item.category === 'portable' || 
-    item.category === 'pos'
-  )
-)
+// Include all equipment devices for pricing
+const availableDevices = computed(() => equipmentData)
 
 // Initialize device pricing
 const devicePricing = reactive({})
