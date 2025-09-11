@@ -188,16 +188,29 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     
     console.log('=== EMAIL VALIDATION ===')
     console.log('FROM valid:', emailRegex.test(emailPayload.from), emailPayload.from)
-    console.log('TO valid:', emailRegex.test(emailPayload.to), emailPayload.to)
+    
+    // Handle TO field validation (might be string or array)
+    if (Array.isArray(emailPayload.to)) {
+      console.log('TO is array:', emailPayload.to)
+      for (let i = 0; i < emailPayload.to.length; i++) {
+        console.log(`TO[${i}] valid:`, emailRegex.test(emailPayload.to[i]), emailPayload.to[i])
+        if (!emailRegex.test(emailPayload.to[i])) {
+          throw new Error(`Invalid TO email format at index ${i}: ${emailPayload.to[i]}`)
+        }
+      }
+    } else {
+      console.log('TO valid:', emailRegex.test(emailPayload.to), emailPayload.to)
+      if (!emailRegex.test(emailPayload.to)) {
+        throw new Error(`Invalid TO email format: ${emailPayload.to}`)
+      }
+    }
+    
     console.log('REPLY_TO valid:', emailRegex.test(emailPayload.reply_to), emailPayload.reply_to)
     console.log('=== END EMAIL VALIDATION ===')
     
     // If any email is invalid, throw a clear error
     if (!emailRegex.test(emailPayload.from)) {
       throw new Error(`Invalid FROM email format: ${emailPayload.from}`)
-    }
-    if (!emailRegex.test(emailPayload.to)) {
-      throw new Error(`Invalid TO email format: ${emailPayload.to}`)
     }
     if (!emailRegex.test(emailPayload.reply_to)) {
       throw new Error(`Invalid REPLY_TO email format: ${emailPayload.reply_to}`)
