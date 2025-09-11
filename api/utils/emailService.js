@@ -146,7 +146,8 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       to: EMAIL_CONFIG.to, // Simple string format 
       subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
       html: emailContent.html,
-      text: emailContent.text
+      text: emailContent.text,
+      editor: "html" // Required by Sender.net transactional API
     }
 
     // Add CC if configured (you might need to test this format)
