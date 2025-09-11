@@ -18,7 +18,27 @@ async function generateApplicationPDF(applicationData) {
       })
       doc.on('error', reject)
 
-      // PDF Header
+      // PDF Header with logo
+      try {
+        const logoPathCandidates = [
+          'public/images/the_payments_expert.png',
+          'src/assets/images/the_payments_expert.png',
+          'dist/images/the_payments_expert.png'
+        ]
+        const fs = require('fs')
+        const path = require('path')
+        let logoPath = null
+        for (const p of logoPathCandidates) {
+          const abs = path.resolve(process.cwd(), p)
+          if (fs.existsSync(abs)) { logoPath = abs; break }
+        }
+        if (logoPath) {
+          doc.image(logoPath, { fit: [220, 60], align: 'center' }).moveDown()
+        }
+      } catch (e) {
+        // Skip logo if not found
+      }
+
       doc.fontSize(20)
          .text('MERCHANT APPLICATION SUBMISSION', { align: 'center' })
          .moveDown()

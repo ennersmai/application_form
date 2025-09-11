@@ -1,4 +1,6 @@
 // Using native fetch instead of axios
+const fs = require('fs')
+const path = require('path')
 
 // Sender.net API configuration
 // Try multiple endpoint patterns to find the correct one
@@ -77,6 +79,23 @@ async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
         disposition: 'attachment'
       }
     ]
+  }
+
+  // Attach inline logo for email header if available
+  try {
+    const logoBase64 = loadLogoBase64()
+    if (logoBase64) {
+      if (!payload.attachments) payload.attachments = []
+      payload.attachments.push({
+        content: logoBase64,
+        filename: 'the_payments_expert.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'logo'
+      })
+    }
+  } catch (e) {
+    console.warn('Logo attachment skipped:', e.message)
   }
 
   const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
@@ -304,6 +323,9 @@ function generateEmailContent(data) {
       </style>
     </head>
     <body>
+      <div style="text-align:center; margin: 10px 0 16px;">
+        <img src="cid:logo" alt="The Payments Expert" style="max-width: 320px; height: auto;" />
+      </div>
       <div class="header">
         <h2>New Merchant Application Received</h2>
         <p><strong>Application ID:</strong> ${applicationId}</p>
@@ -488,6 +510,24 @@ Generated on ${new Date().toLocaleString('en-GB')}
   `.trim()
 
   return { html, text }
+}
+
+// Load logo from common locations and return base64 string (without data URI)
+function loadLogoBase64() {
+  const candidatePaths = [
+    path.resolve(process.cwd(), 'public/images/the_payments_expert.png'),
+    path.resolve(process.cwd(), 'src/assets/images/the_payments_expert.png'),
+    path.resolve(process.cwd(), 'dist/images/the_payments_expert.png')
+  ]
+  for (const p of candidatePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const buf = fs.readFileSync(p)
+        return buf.toString('base64')
+      }
+    } catch {}
+  }
+  return null
 }
 
 // Helper functions (same as PDF service)
