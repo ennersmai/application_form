@@ -101,28 +101,34 @@ export function validateApplicationData(data) {
       if (data.pricing.devicePricing && typeof data.pricing.devicePricing === 'object') {
         const deviceEntries = Object.entries(data.pricing.devicePricing)
         
-        if (deviceEntries.length === 0) {
+        // Check if at least one device has quantity > 0
+        const hasSelectedDevices = deviceEntries.some(([_, device]) => device.quantity > 0)
+        if (!hasSelectedDevices) {
           errors.push('At least one device must be selected for pricing')
         }
         
         deviceEntries.forEach(([deviceId, device]) => {
           const prefix = `Device ${deviceId}`
-          
-          if (typeof device.quantity !== 'number' || device.quantity <= 0) {
-            errors.push(`${prefix}: Quantity must be greater than 0`)
-          }
-          
-          if (typeof device.monthlyPrice !== 'number' || device.monthlyPrice < 0) {
-            errors.push(`${prefix}: Monthly price must be a positive number`)
-          }
-          
-          if (!device.contractType) {
-            errors.push(`${prefix}: Contract type is required`)
+
+          // Only validate devices with quantity > 0
+          if (device.quantity > 0) {
+            if (typeof device.quantity !== 'number' || device.quantity <= 0) {
+              errors.push(`${prefix}: Quantity must be greater than 0`)
+            }
+
+            if (typeof device.monthlyPrice !== 'number' || device.monthlyPrice <= 0) {
+              errors.push(`${prefix}: Monthly price must be a positive number`)
+            }
+
+            if (!device.contractType) {
+              errors.push(`${prefix}: Contract type is required`)
+            }
           }
         })
         
-        // Validate total monthly cost
-        if (typeof data.pricing.totalMonthlyCost !== 'number' || data.pricing.totalMonthlyCost <= 0) {
+        // Validate total monthly cost - only if there are devices with quantity > 0
+        const hasSelectedDevices = deviceEntries.some(([_, device]) => device.quantity > 0)
+        if (hasSelectedDevices && (typeof data.pricing.totalMonthlyCost !== 'number' || data.pricing.totalMonthlyCost <= 0)) {
           errors.push('Total monthly cost must be greater than 0')
         }
       } else {

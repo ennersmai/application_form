@@ -341,7 +341,17 @@ const updateDevicePricing = (deviceId) => {
   if (!formStore.pricing.devicePricing) {
     formStore.pricing.devicePricing = {}
   }
-  
+
+  // Ensure monthlyPrice is set to default if it's 0 or undefined
+  const config = deviceConfigurations[deviceId]
+  const currentMonthlyPrice = devicePricing[deviceId].monthlyPrice
+  const defaultPrice = config?.defaultPrice || 25.00
+
+  // If quantity > 0 and monthlyPrice is 0 or undefined, set it to default
+  if (devicePricing[deviceId].quantity > 0 && (!currentMonthlyPrice || currentMonthlyPrice <= 0)) {
+    devicePricing[deviceId].monthlyPrice = defaultPrice
+  }
+
   formStore.pricing.devicePricing[deviceId] = {
     quantity: devicePricing[deviceId].quantity,
     monthlyPrice: devicePricing[deviceId].monthlyPrice,
