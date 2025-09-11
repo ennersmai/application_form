@@ -168,15 +168,6 @@ const isStepValid = computed(() => {
          !sortCodeError.value &&
          !accountNumberError.value
 
-  console.log('Banking validation:', {
-    accountName: accountName.value,
-    accountNameLength: accountName.value.length,
-    isValidSortCode: isValidSortCode.value,
-    isValidAccountNumber: isValidAccountNumber.value,
-    sortCodeError: sortCodeError.value,
-    accountNumberError: accountNumberError.value,
-    isStepValid: valid
-  })
 
   return valid
 })
@@ -248,7 +239,6 @@ const updateBanking = () => {
 
 // Auto-populate account name from legal name
 const updateAccountName = () => {
-  console.log('updateAccountName called:', { legalName: legalName.value, accountName: accountName.value })
   if (legalName.value && legalName.value !== accountName.value) {
     accountName.value = legalName.value
     updateBanking()
@@ -277,11 +267,9 @@ watch(() => uiStore.currentStep, (newStep, oldStep) => {
 
 // Initialize
 onMounted(() => {
-  console.log('Banking step mounted')
   updateAccountName()
   validateSortCode()
   validateAccountNumber()
   uiStore.setStepValid(6, isStepValid.value)
-  console.log('Banking step initialized, isStepValid:', isStepValid.value)
 })
 </script>
