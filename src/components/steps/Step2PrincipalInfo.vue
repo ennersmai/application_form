@@ -252,13 +252,13 @@
               <label :for="`postcode-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
                 Postcode *
               </label>
-              <div class="flex space-x-2">
+              <div class="space-y-2">
                 <input
                   :id="`postcode-${principal.id}`"
                   v-model="principal.homeAddress.postcode"
                   type="text"
                   required
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   :class="{ 'border-red-300': !principal.homeAddress.postcode && (showValidation || touchedFields[`postcode-${principal.id}`]) }"
                   placeholder="e.g., SW1A 1AA"
                   @input="updatePrincipalAddress(principal.id, 'postcode', $event.target.value)"
@@ -268,10 +268,10 @@
                   type="button"
                   @click="lookupHomeAddress(principal.id)"
                   :disabled="!principal.homeAddress.postcode || lookupState[principal.id]?.loading"
-                  class="px-4 py-2 border border-primary-600 text-primary-600 rounded-md hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  class="w-full sm:w-auto px-4 py-2 border border-primary-600 text-primary-600 rounded-md hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   <span v-if="lookupState[principal.id]?.loading">Loading...</span>
-                  <span v-else>Lookup</span>
+                  <span v-else>Lookup Address</span>
                 </button>
               </div>
               

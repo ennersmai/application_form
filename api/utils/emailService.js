@@ -43,7 +43,7 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
     }
   }
   
-  // If all endpoints failed, provide fallback logging
+  // If all endpoints failed, provide fallback logging but don't fail the submission
   console.error('All Sender.net endpoints failed. Logging email for manual processing...')
   console.log('=== EMAIL THAT FAILED TO SEND ===')
   console.log('TO:', EMAIL_CONFIG.to, EMAIL_CONFIG.cc ? `, CC: ${EMAIL_CONFIG.cc}` : '')
@@ -55,7 +55,14 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   console.log('SUBMITTED:', new Date().toISOString())
   console.log('=== END EMAIL LOG ===')
   
-  throw lastError || new Error('All Sender.net endpoints failed')
+  // Return a fallback success to prevent submission failure
+  console.log('⚠️ EMAIL FALLBACK: Application will be saved but email notification failed')
+  return {
+    success: true,
+    messageId: 'fallback-' + Date.now(),
+    service: 'fallback-logging',
+    warning: 'Email service unavailable - check logs for email content'
+  }
 }
 
 async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
@@ -134,17 +141,24 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     
     console.log('Sender.net response status:', response.status)
     console.log('Sender.net response headers:', Object.fromEntries(response.headers))
+    
+    // Always log the response body for debugging
+    const responseText = await response.text()
+    let errorData
+    try {
+      errorData = JSON.parse(responseText)
+    } catch (e) {
+      errorData = { message: responseText }
+    }
+    console.log('Sender.net error response body:', errorData)
 
     if (response.ok) {
-      const data = await response.json()
-      console.log('Email sent successfully via Sender.net:', data)
+      console.log('Email sent successfully via Sender.net:', errorData)
       return {
         success: true,
-        messageId: data.message_id || data.id
+        messageId: errorData.message_id || errorData.id
       }
     } else {
-      const errorData = await response.json().catch(() => ({}))
-      console.log('Sender.net error response body:', errorData)
       
       // Provide specific error messages for common issues
       if (response.status === 403) {

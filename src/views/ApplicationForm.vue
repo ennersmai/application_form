@@ -259,8 +259,20 @@ const cancelSave = () => {
   showSaveConfirmation.value = false
 }
 
+// Track if application has been submitted
+let isSubmitted = false
+
 const submitApplication = async () => {
   try {
+    // Clear any pending auto-save
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout)
+      autoSaveTimeout = null
+    }
+    
+    // Mark as submitted to prevent further auto-saves
+    isSubmitted = true
+    
     // Show loading modal
     submissionModalData.value = {
       type: 'loading',
@@ -289,6 +301,9 @@ const submitApplication = async () => {
     
   } catch (error) {
     console.error('Submission error:', error)
+    
+    // Reset submitted flag on error
+    isSubmitted = false
     
     // Show error modal
     submissionModalData.value = {
@@ -328,7 +343,7 @@ watch(() => formStore.$state, () => {
   
   autoSaveTimeout = setTimeout(async () => {
     try {
-      if (offlineStore.autoSaveEnabled && formStore.applicationId && !uiStore.isSubmitting) {
+      if (offlineStore.autoSaveEnabled && formStore.applicationId && !uiStore.isSubmitting && !isSubmitted) {
         // Check if this application has already been submitted
         const existingApp = await offlineStore.getApplicationById(formStore.applicationId)
         if (!existingApp || existingApp.status === 'draft') {

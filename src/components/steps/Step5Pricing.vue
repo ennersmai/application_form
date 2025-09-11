@@ -88,28 +88,23 @@
                 <label :for="`price-${device.id}`" class="block text-xs font-medium text-gray-700 mb-1">
                   Price per month
                 </label>
-                <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm">
-                  <div class="px-2 py-2 bg-gray-100 border-r border-gray-300 rounded-l-md flex items-center text-gray-700 text-sm">
-                    £
-                  </div>
-                  <input
-                    :id="`price-${device.id}`"
-                    v-model.number="devicePricing[device.id].monthlyPrice"
-                    type="number"
-                    :min="getDeviceMinPrice(device.id)"
-                    :max="getDeviceMaxPrice(device.id)"
-                    step="0.01"
-                    class="flex-1 min-w-0 px-3 py-2 border-0 text-center focus:outline-none focus:ring-0 text-base"
-                    :placeholder="getDeviceDefaultPrice(device.id).toString()"
-                    @input="updateDevicePricing(device.id)"
-                    :disabled="getDeviceQuantity(device.id) === 0 || isUpfrontPurchase(device.id)"
-                  />
+                <select
+                  v-if="!isUpfrontPurchase(device.id)"
+                  :id="`price-${device.id}`"
+                  v-model.number="devicePricing[device.id].monthlyPrice"
+                  @change="updateDevicePricing(device.id)"
+                  :disabled="getDeviceQuantity(device.id) === 0"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base"
+                >
+                  <option v-for="price in getPriceOptions(device.id)" :key="price" :value="price">
+                    £{{ price.toFixed(2) }}
+                  </option>
+                </select>
+                <div v-else class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-base">
+                  £{{ getDeviceDefaultPrice(device.id).toFixed(2) }}
                 </div>
-                <p v-if="!isUpfrontPurchase(device.id)" class="text-xs text-gray-500 mt-1">
-                  Range: £{{ getDeviceMinPrice(device.id) }} - £{{ getDeviceMaxPrice(device.id) }}
-                </p>
-                <p v-else class="text-xs text-gray-500 mt-1">
-                  One-time purchase: £{{ getDeviceDefaultPrice(device.id) }}
+                <p v-if="devicePricing[device.id].contractType === 'promo'" class="text-xs text-green-600 mt-1">
+                  First 6 months at £1/month, then selected price
                 </p>
               </div>
             </div>
@@ -141,7 +136,7 @@
           class="flex justify-between text-sm"
         >
           <span class="text-blue-700">
-            {{ device.name }} ({{ devicePricing[device.id].quantity }}x @ £{{ devicePricing[device.id].monthlyPrice.toFixed(2) }})
+            {{ device.name }} ({{ devicePricing[device.id].quantity }}x @ £{{ (devicePricing[device.id].monthlyPrice || 0).toFixed(2) }})
             <span v-if="devicePricing[device.id].contractType === 'promo'" class="text-xs">[6mo@£1]</span>
             <span v-if="isUpfrontPurchase(device.id)" class="text-xs">[One-time]</span>
           </span>
@@ -299,6 +294,30 @@ const isUpfrontPurchase = (deviceId) => {
   return pricing?.contractType === 'purchase'
 }
 
+const getPriceOptions = (deviceId) => {
+  const config = deviceConfigurations[deviceId]
+  if (!config) return []
+  
+  const options = []
+  const min = config.minPrice
+  const max = config.maxPrice
+  
+  // For devices with rental options, generate price dropdown values
+  if (deviceId === 'clover-flex' || deviceId === 'clover-mini') {
+    // £13-30 range
+    for (let price = min; price <= max; price++) {
+      options.push(price)
+    }
+  } else if (deviceId === 'clover-station-duo') {
+    // £30-50 range
+    for (let price = min; price <= max; price += 2) {
+      options.push(price)
+    }
+  }
+  
+  return options
+}
+
 const incrementQuantity = (deviceId) => {
   devicePricing[deviceId].quantity++
   updateDevicePricing(deviceId)
@@ -353,5 +372,6 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
+  appearance: textfield; /* Standard */
 }
 </style>
