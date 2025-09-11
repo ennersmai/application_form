@@ -1,4 +1,4 @@
-const axios = require('axios')
+// Using native fetch instead of axios
 
 // Sender.net API configuration
 const SENDER_CONFIG = {
@@ -54,31 +54,34 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
       }]
     }
 
-    // Send via Sender.net API
-    const response = await axios.post(`${SENDER_CONFIG.apiUrl}/send`, emailPayload, {
+    // Send via Sender.net API using native fetch
+    const response = await fetch(`${SENDER_CONFIG.apiUrl}/send`, {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
         'Content-Type': 'application/json'
       },
-      timeout: 30000
+      body: JSON.stringify(emailPayload)
     })
 
-    if (response.status === 200 || response.status === 201) {
-      console.log('Email sent successfully via Sender.net:', response.data)
+    if (response.ok) {
+      const data = await response.json()
+      console.log('Email sent successfully via Sender.net:', data)
       return {
         success: true,
-        messageId: response.data.message_id || response.data.id
+        messageId: data.message_id || data.id
       }
     } else {
-      throw new Error(`Sender.net API returned status ${response.status}`)
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(`Sender.net API returned status ${response.status}: ${errorData.message || response.statusText}`)
     }
 
   } catch (error) {
     console.error('Sender.net email error:', error)
     
     // Handle specific Sender.net errors
-    if (error.response?.data) {
-      throw new Error(`Sender.net API error: ${error.response.data.message || error.response.data.error}`)
+    if (error.message.includes('Sender.net API')) {
+      throw error
     }
     
     throw new Error(`Failed to send email: ${error.message}`)

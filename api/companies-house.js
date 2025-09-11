@@ -1,5 +1,3 @@
-const axios = require('axios')
-
 const COMPANIES_HOUSE_API_BASE = 'https://api.company-information.service.gov.uk'
 const API_KEY = process.env.COMPANIES_HOUSE_API_KEY
 
@@ -26,28 +24,41 @@ export default async function handler(req, res) {
     // Remove any spaces and convert to uppercase
     const cleanCompanyNumber = companyNumber.replace(/\s+/g, '').toUpperCase()
 
-    // Create axios instance with auth
-    const companiesHouseApi = axios.create({
-      baseURL: COMPANIES_HOUSE_API_BASE,
-      auth: {
-        username: API_KEY,
-        password: ''
-      },
+    console.log('Making request to Companies House API for company:', cleanCompanyNumber)
+
+    // Use native fetch instead of axios
+    const authString = Buffer.from(`${API_KEY}:`).toString('base64')
+    
+    // Get basic company information
+    const companyResponse = await fetch(`${COMPANIES_HOUSE_API_BASE}/company/${cleanCompanyNumber}`, {
       headers: {
+        'Authorization': `Basic ${authString}`,
         'Accept': 'application/json'
       }
     })
 
-    console.log('Making request to Companies House API for company:', cleanCompanyNumber)
+    if (!companyResponse.ok) {
+      const errorData = await companyResponse.json().catch(() => ({}))
+      throw new Error(`Companies House API error: ${companyResponse.status} ${companyResponse.statusText}`)
+    }
 
-    // Get basic company information
-    const companyResponse = await companiesHouseApi.get(`/company/${cleanCompanyNumber}`)
-    const company = companyResponse.data
+    const company = await companyResponse.json()
     console.log('Company data retrieved:', { companyNumber: company.company_number, companyName: company.company_name })
 
     // Get officers (directors) information
-    const officersResponse = await companiesHouseApi.get(`/company/${cleanCompanyNumber}/officers`)
-    const officers = officersResponse.data
+    const officersResponse = await fetch(`${COMPANIES_HOUSE_API_BASE}/company/${cleanCompanyNumber}/officers`, {
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Accept': 'application/json'
+      }
+    })
+
+    if (!officersResponse.ok) {
+      const errorData = await officersResponse.json().catch(() => ({}))
+      throw new Error(`Officers API error: ${officersResponse.status} ${officersResponse.statusText}`)
+    }
+
+    const officers = await officersResponse.json()
     console.log('Officers data retrieved:', { officerCount: officers.items?.length || 0 })
 
     const result = {
@@ -82,17 +93,17 @@ export default async function handler(req, res) {
       stack: error.stack
     })
 
-    if (error.response?.status === 404) {
+      if (error.message?.includes('404')) {
       return res.status(200).json({
         success: false,
         error: 'Company not found. Please check the company number and try again.'
       })
-    } else if (error.response?.status === 401) {
+    } else if (error.message?.includes('401')) {
       return res.status(500).json({
         success: false,
         error: 'Companies House API key is invalid or missing.'
       })
-    } else if (error.response?.status === 429) {
+    } else if (error.message?.includes('429')) {
       return res.status(200).json({
         success: false,
         error: 'Too many requests. Please wait a moment and try again.'
