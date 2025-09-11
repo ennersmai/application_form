@@ -220,12 +220,18 @@ const currentStepComponent = computed(() => {
 })
 
 // Methods
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 const nextStep = () => {
   uiStore.nextStep()
+  scrollToTop()
 }
 
 const previousStep = () => {
   uiStore.previousStep()
+  scrollToTop()
 }
 
 const saveAndExit = () => {

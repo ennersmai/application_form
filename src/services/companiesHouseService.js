@@ -45,6 +45,47 @@ export const companiesHouseService = {
   },
 
   /**
+   * Search companies by name
+   * @param {string} searchQuery - The company name to search for
+   * @returns {Promise<Object>} Search results
+   */
+  async searchCompaniesByName(searchQuery) {
+    try {
+      const response = await fetch('/api/companies-house', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          searchQuery: searchQuery,
+          searchByName: true
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Companies House search error:', error)
+
+      if (error.message?.includes('429')) {
+        return {
+          success: false,
+          error: 'Too many requests. Please wait a moment and try again.'
+        }
+      } else {
+        return {
+          success: false,
+          error: error.message || 'Failed to search companies. Please try again.'
+        }
+      }
+    }
+  },
+
+  /**
    * Validate company number format
    * @param {string} companyNumber 
    * @returns {boolean}

@@ -103,6 +103,10 @@
                 (Beneficial Owner)
               </span>
             </div>
+            <div v-if="principal.homeAddress" class="md:col-span-2">
+              <span class="text-gray-600">Home Address:</span>
+              <span class="font-medium ml-2">{{ formatAddress(principal.homeAddress) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -175,7 +179,7 @@
     <!-- Pricing -->
     <div class="bg-white border border-gray-200 rounded-lg p-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-medium text-gray-900">Pricing</h3>
+        <h3 class="text-lg font-medium text-gray-900">Equipment Pricing</h3>
         <button
           @click="editSection(5)"
           class="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -183,24 +187,25 @@
           Edit
         </button>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div>
-          <span class="text-gray-600">Consumer Debit:</span>
-          <span class="font-medium ml-2">{{ formStore.pricing.consumerDebit }}%</span>
+      <div v-if="selectedPricingDevices.length > 0" class="space-y-2">
+        <div
+          v-for="device in selectedPricingDevices"
+          :key="device.id"
+          class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
+        >
+          <div>
+            <span class="font-medium">{{ device.name }}</span>
+            <span class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ device.monthlyPrice.toFixed(2) }}/month)</span>
+            <span v-if="device.pricingType === 'promo'" class="text-xs text-green-600 ml-1">[Promotional]</span>
+          </div>
+          <span class="font-medium">£{{ device.totalMonthly.toFixed(2) }}/month</span>
         </div>
-        <div>
-          <span class="text-gray-600">Consumer Credit:</span>
-          <span class="font-medium ml-2">{{ formStore.pricing.consumerCredit }}%</span>
-        </div>
-        <div>
-          <span class="text-gray-600">Commercial Card:</span>
-          <span class="font-medium ml-2">{{ formStore.pricing.commercialCard }}%</span>
-        </div>
-        <div>
-          <span class="text-gray-600">Auth Fee:</span>
-          <span class="font-medium ml-2">£{{ formStore.pricing.authorisationFee }}</span>
+        <div class="border-t border-gray-200 pt-2 flex justify-between font-medium">
+          <span>Total Monthly Cost:</span>
+          <span>£{{ totalMonthlyCost.toFixed(2) }}/month</span>
         </div>
       </div>
+      <div v-else class="text-sm text-gray-500">No pricing configured</div>
     </div>
 
     <!-- Equipment -->
@@ -351,6 +356,7 @@
 import { ref, computed, watch } from 'vue'
 import { useFormStore } from '@/stores/formStore'
 import { useUiStore } from '@/stores/uiStore'
+import { equipmentData } from '@/data/equipmentData'
 
 const formStore = useFormStore()
 const uiStore = useUiStore()
@@ -367,6 +373,35 @@ const businessTypeDisplay = computed(() => {
     case 'partnership': return 'Partnership'
     default: return 'Unknown'
   }
+})
+
+const selectedPricingDevices = computed(() => {
+  const devicePricing = formStore.pricing.devicePricing || {}
+  const devices = []
+  
+  Object.entries(devicePricing).forEach(([deviceId, pricing]) => {
+    if (pricing.quantity > 0) {
+      const equipmentItem = equipmentData.find(item => item.id === deviceId)
+      if (equipmentItem) {
+        devices.push({
+          id: deviceId,
+          name: equipmentItem.name,
+          quantity: pricing.quantity,
+          monthlyPrice: pricing.monthlyPrice,
+          pricingType: pricing.pricingType,
+          totalMonthly: pricing.quantity * pricing.monthlyPrice
+        })
+      }
+    }
+  })
+  
+  return devices
+})
+
+const totalMonthlyCost = computed(() => {
+  return selectedPricingDevices.value.reduce((total, device) => {
+    return total + device.totalMonthly
+  }, 0)
 })
 
 const equipmentTotal = computed(() => {
@@ -390,6 +425,7 @@ const isStepValid = computed(() => {
 // Methods
 const editSection = (stepNumber) => {
   uiStore.goToStep(stepNumber)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const formatPosition = (position) => {

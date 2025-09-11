@@ -26,7 +26,14 @@ export const useFormStore = defineStore('form', {
         email: '',
         phone: '',
         position: 'sole_trader', // sole_trader, director, ultimate_owner
-        ownershipPercentage: 100
+        ownershipPercentage: 100,
+        homeAddress: {
+          line1: '',
+          line2: '',
+          city: '',
+          county: '',
+          postcode: ''
+        }
       }
     ],
 
@@ -119,7 +126,14 @@ export const useFormStore = defineStore('form', {
         email: '',
         phone: '',
         position: 'director',
-        ownershipPercentage: 0
+        ownershipPercentage: 0,
+        homeAddress: {
+          line1: '',
+          line2: '',
+          city: '',
+          county: '',
+          postcode: ''
+        }
       })
     },
 

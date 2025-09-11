@@ -175,6 +175,97 @@
             </p>
           </div>
         </div>
+
+        <!-- Home Address Section -->
+        <div class="md:col-span-2 mt-4">
+          <h4 class="text-sm font-medium text-gray-900 mb-3">Home Address</h4>
+          
+          <!-- Address Line 1 -->
+          <div class="mb-3">
+            <label :for="`addressLine1-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 1 *
+            </label>
+            <input
+              :id="`addressLine1-${principal.id}`"
+              v-model="principal.homeAddress.line1"
+              type="text"
+              required
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              :class="{ 'border-red-300': !principal.homeAddress.line1 && (showValidation || touchedFields[`addressLine1-${principal.id}`]) }"
+              placeholder="Enter street address"
+              @input="updatePrincipalAddress(principal.id, 'line1', $event.target.value)"
+              @blur="touchedFields[`addressLine1-${principal.id}`] = true"
+            />
+          </div>
+
+          <!-- Address Line 2 -->
+          <div class="mb-3">
+            <label :for="`addressLine2-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 2
+            </label>
+            <input
+              :id="`addressLine2-${principal.id}`"
+              v-model="principal.homeAddress.line2"
+              type="text"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter address line 2 (optional)"
+              @input="updatePrincipalAddress(principal.id, 'line2', $event.target.value)"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- City -->
+            <div>
+              <label :for="`city-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+                City *
+              </label>
+              <input
+                :id="`city-${principal.id}`"
+                v-model="principal.homeAddress.city"
+                type="text"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                :class="{ 'border-red-300': !principal.homeAddress.city && (showValidation || touchedFields[`city-${principal.id}`]) }"
+                placeholder="Enter city"
+                @input="updatePrincipalAddress(principal.id, 'city', $event.target.value)"
+                @blur="touchedFields[`city-${principal.id}`] = true"
+              />
+            </div>
+
+            <!-- County -->
+            <div>
+              <label :for="`county-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+                County
+              </label>
+              <input
+                :id="`county-${principal.id}`"
+                v-model="principal.homeAddress.county"
+                type="text"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Enter county"
+                @input="updatePrincipalAddress(principal.id, 'county', $event.target.value)"
+              />
+            </div>
+
+            <!-- Postcode -->
+            <div>
+              <label :for="`postcode-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+                Postcode *
+              </label>
+              <input
+                :id="`postcode-${principal.id}`"
+                v-model="principal.homeAddress.postcode"
+                type="text"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                :class="{ 'border-red-300': !principal.homeAddress.postcode && (showValidation || touchedFields[`postcode-${principal.id}`]) }"
+                placeholder="e.g., SW1A 1AA"
+                @input="updatePrincipalAddress(principal.id, 'postcode', $event.target.value)"
+                @blur="touchedFields[`postcode-${principal.id}`] = true"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -259,7 +350,7 @@ const beneficialOwners = computed(() => {
 
 const isStepValid = computed(() => {
   const allFieldsValid = principals.value.every(principal => {
-    return principal.firstName && 
+    const hasBasicInfo = principal.firstName && 
            principal.lastName && 
            principal.email && 
            isValidEmail(principal.email) &&
@@ -267,6 +358,13 @@ const isStepValid = computed(() => {
            principal.position &&
            principal.ownershipPercentage >= 0 &&
            principal.ownershipPercentage <= 100
+    
+    const hasHomeAddress = principal.homeAddress &&
+           principal.homeAddress.line1 &&
+           principal.homeAddress.city &&
+           principal.homeAddress.postcode
+    
+    return hasBasicInfo && hasHomeAddress
   })
   
   // For multiple principals, ownership should total 100%
@@ -285,6 +383,23 @@ const updatePrincipal = (id, field, value) => {
   const principal = principals.value.find(p => p.id === id)
   if (principal) {
     principal[field] = value
+    formStore.touch()
+  }
+}
+
+const updatePrincipalAddress = (id, field, value) => {
+  const principal = principals.value.find(p => p.id === id)
+  if (principal) {
+    if (!principal.homeAddress) {
+      principal.homeAddress = {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        postcode: ''
+      }
+    }
+    principal.homeAddress[field] = value
     formStore.touch()
   }
 }

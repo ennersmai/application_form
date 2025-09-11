@@ -1,318 +1,158 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">Pricing</h2>
-      <p class="text-gray-600">Set the card processing rates and fees for this merchant account.</p>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">Equipment Pricing</h2>
+      <p class="text-gray-600">Select equipment and set monthly pricing for this merchant.</p>
     </div>
 
-    <!-- Pricing Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Consumer Debit -->
-      <div class="bg-white border border-gray-200 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-          <label for="consumerDebit" class="text-sm font-medium text-gray-900">
-            Consumer Debit %
-          </label>
-          <span class="text-xs text-gray-500">Min: 0.25%</span>
-        </div>
-        
-        <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500" :class="{ 'border-red-300': consumerDebitError }">
-          <input
-            id="consumerDebit"
-            v-model.number="consumerDebit"
-            type="number"
-            min="0.25"
-            step="0.01"
-            required
-            class="flex-1 min-w-0 px-3 py-3 border-0 rounded-l-md focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
-            placeholder="0.40"
-            @input="validateConsumerDebit"
-          />
-          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
-            <button
-              type="button"
-              @click="incrementConsumerDebit"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              @click="decrementConsumerDebit"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center"
-              :disabled="consumerDebit <= 0.25"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-          <div class="px-2 py-3 bg-gray-100 border-l border-gray-300 rounded-r-md flex items-center text-gray-700 font-medium flex-shrink-0">
-            %
-          </div>
-        </div>
-        
-        <div class="mt-2 flex items-center justify-between text-xs">
-          <span class="text-gray-500">Default: 0.40%</span>
-          <button
-            v-if="consumerDebit !== 0.40"
-            @click="resetConsumerDebit"
-            class="text-primary-600 hover:text-primary-700"
-          >
-            Reset to default
-          </button>
-        </div>
-        
-        <p v-if="consumerDebitError" class="mt-1 text-sm text-red-600">{{ consumerDebitError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Rate for UK debit card transactions</p>
-      </div>
-
-      <!-- Consumer Credit -->
-      <div class="bg-white border border-gray-200 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-          <label for="consumerCredit" class="text-sm font-medium text-gray-900">
-            Consumer Credit %
-          </label>
-          <span class="text-xs text-gray-500">Min: 0.43%</span>
-        </div>
-        
-        <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500" :class="{ 'border-red-300': consumerCreditError }">
-          <input
-            id="consumerCredit"
-            v-model.number="consumerCredit"
-            type="number"
-            min="0.43"
-            step="0.01"
-            required
-            class="flex-1 min-w-0 px-3 py-3 border-0 rounded-l-md focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
-            placeholder="0.65"
-            @input="validateConsumerCredit"
-          />
-          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
-            <button
-              type="button"
-              @click="incrementConsumerCredit"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              @click="decrementConsumerCredit"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center"
-              :disabled="consumerCredit <= 0.43"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-          <div class="px-2 py-3 bg-gray-100 border-l border-gray-300 rounded-r-md flex items-center text-gray-700 font-medium flex-shrink-0">
-            %
-          </div>
-        </div>
-        
-        <div class="mt-2 flex items-center justify-between text-xs">
-          <span class="text-gray-500">Default: 0.65%</span>
-          <button
-            v-if="consumerCredit !== 0.65"
-            @click="resetConsumerCredit"
-            class="text-primary-600 hover:text-primary-700"
-          >
-            Reset to default
-          </button>
-        </div>
-        
-        <p v-if="consumerCreditError" class="mt-1 text-sm text-red-600">{{ consumerCreditError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Rate for UK credit card transactions</p>
-      </div>
-
-      <!-- Commercial Card -->
-      <div class="bg-white border border-gray-200 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-          <label for="commercialCard" class="text-sm font-medium text-gray-900">
-            Commercial Card %
-          </label>
-          <span class="text-xs text-gray-500">Min: 1.6%</span>
-        </div>
-        
-        <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500" :class="{ 'border-red-300': commercialCardError }">
-          <input
-            id="commercialCard"
-            v-model.number="commercialCard"
-            type="number"
-            min="1.6"
-            step="0.01"
-            required
-            class="flex-1 min-w-0 px-3 py-3 border-0 rounded-l-md focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
-            placeholder="2.00"
-            @input="validateCommercialCard"
-          />
-          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
-            <button
-              type="button"
-              @click="incrementCommercialCard"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              @click="decrementCommercialCard"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center"
-              :disabled="commercialCard <= 1.6"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-          <div class="px-2 py-3 bg-gray-100 border-l border-gray-300 rounded-r-md flex items-center text-gray-700 font-medium flex-shrink-0">
-            %
-          </div>
-        </div>
-        
-        <div class="mt-2 flex items-center justify-between text-xs">
-          <span class="text-gray-500">Default: 2.00%</span>
-          <button
-            v-if="commercialCard !== 2.00"
-            @click="resetCommercialCard"
-            class="text-primary-600 hover:text-primary-700"
-          >
-            Reset to default
-          </button>
-        </div>
-        
-        <p v-if="commercialCardError" class="mt-1 text-sm text-red-600">{{ commercialCardError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Rate for business/corporate cards</p>
-      </div>
-
-      <!-- Authorization Fee -->
-      <div class="bg-white border border-gray-200 rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-          <label for="authFee" class="text-sm font-medium text-gray-900">
-            Authorization Fee
-          </label>
-          <span class="text-xs text-gray-500">Min: £0.01</span>
-        </div>
-        
-        <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500" :class="{ 'border-red-300': authFeeError }">
-          <div class="px-2 py-3 bg-gray-100 border-r border-gray-300 rounded-l-md flex items-center text-gray-700 font-medium flex-shrink-0">
-            £
-          </div>
-          <input
-            id="authFee"
-            v-model.number="authFee"
-            type="number"
-            min="0.01"
-            step="0.01"
-            required
-            class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
-            placeholder="0.04"
-            @input="validateAuthFee"
-          />
-          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
-            <button
-              type="button"
-              @click="incrementAuthFee"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              @click="decrementAuthFee"
-              class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center rounded-br-md"
-              :disabled="authFee <= 0.01"
-            >
-              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        <div class="mt-2 flex items-center justify-between text-xs">
-          <span class="text-gray-500">Default: £0.04</span>
-          <button
-            v-if="authFee !== 0.04"
-            @click="resetAuthFee"
-            class="text-primary-600 hover:text-primary-700"
-          >
-            Reset to default
-          </button>
-        </div>
-        
-        <p v-if="authFeeError" class="mt-1 text-sm text-red-600">{{ authFeeError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Fee charged per transaction authorization</p>
-      </div>
-    </div>
-
-    <!-- Pricing Summary -->
-    <div v-if="isStepValid" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <h3 class="text-sm font-medium text-blue-800 mb-3">Pricing Summary</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div class="space-y-2">
-          <div class="flex justify-between">
-            <span class="text-blue-700">Consumer Debit:</span>
-            <span class="font-medium text-blue-900">{{ consumerDebit }}%</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-blue-700">Consumer Credit:</span>
-            <span class="font-medium text-blue-900">{{ consumerCredit }}%</span>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <div class="flex justify-between">
-            <span class="text-blue-700">Commercial Card:</span>
-            <span class="font-medium text-blue-900">{{ commercialCard }}%</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-blue-700">Authorization Fee:</span>
-            <span class="font-medium text-blue-900">£{{ authFee }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="flex flex-wrap gap-2 justify-center">
-      <button
-        @click="resetAllToDefaults"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+    <!-- Equipment Pricing List -->
+    <div class="space-y-4">
+      <div 
+        v-for="device in availableDevices" 
+        :key="device.id"
+        class="bg-white border border-gray-200 rounded-lg p-4"
       >
-        Reset All to Defaults
-      </button>
-      <button
-        @click="setCompetitiveRates"
-        class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-      >
-        Set Competitive Rates
-      </button>
+        <div class="flex items-start space-x-4">
+          <!-- Device Image -->
+          <div class="flex-shrink-0">
+            <img
+              :src="device.image"
+              :alt="device.name"
+              class="h-16 w-16 object-contain rounded-lg"
+              @error="handleImageError($event, device.id)"
+            />
+          </div>
+
+          <!-- Device Details -->
+          <div class="flex-1">
+            <h3 class="text-sm font-medium text-gray-900">{{ device.name }}</h3>
+            <p class="text-xs text-gray-500 mt-1">{{ device.description }}</p>
+            
+            <!-- Quantity and Pricing Controls -->
+            <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <!-- Quantity -->
+              <div>
+                <label :for="`quantity-${device.id}`" class="block text-xs font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm">
+                  <button
+                    type="button"
+                    @click="decrementQuantity(device.id)"
+                    class="px-3 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-r border-gray-300 rounded-l-md"
+                    :disabled="getDeviceQuantity(device.id) <= 0"
+                  >
+                    <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <input
+                    :id="`quantity-${device.id}`"
+                    v-model.number="devicePricing[device.id].quantity"
+                    type="number"
+                    min="0"
+                    class="flex-1 min-w-0 px-3 py-2 border-0 text-center focus:outline-none focus:ring-0 text-base"
+                    @input="updateDevicePricing(device.id)"
+                  />
+                  <button
+                    type="button"
+                    @click="incrementQuantity(device.id)"
+                    class="px-3 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-l border-gray-300 rounded-r-md"
+                  >
+                    <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Monthly Price -->
+              <div>
+                <label :for="`price-${device.id}`" class="block text-xs font-medium text-gray-700 mb-1">
+                  Price per month
+                </label>
+                <div class="flex items-stretch border border-gray-300 rounded-md shadow-sm">
+                  <div class="px-2 py-2 bg-gray-100 border-r border-gray-300 rounded-l-md flex items-center text-gray-700 text-sm">
+                    £
+                  </div>
+                  <input
+                    :id="`price-${device.id}`"
+                    v-model.number="devicePricing[device.id].monthlyPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="flex-1 min-w-0 px-3 py-2 border-0 text-center focus:outline-none focus:ring-0 text-base"
+                    placeholder="0.00"
+                    @input="updateDevicePricing(device.id)"
+                    :disabled="getDeviceQuantity(device.id) === 0"
+                  />
+                </div>
+              </div>
+
+              <!-- Pricing Type -->
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">
+                  Pricing Type
+                </label>
+                <select
+                  v-model="devicePricing[device.id].pricingType"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base"
+                  @change="updateDevicePricing(device.id)"
+                  :disabled="getDeviceQuantity(device.id) === 0"
+                >
+                  <option value="full">Full Price</option>
+                  <option value="promo">Promotional</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Device Total -->
+            <div v-if="getDeviceQuantity(device.id) > 0" class="mt-2 text-sm text-gray-600">
+              Total: <span class="font-medium text-gray-900">£{{ getDeviceTotal(device.id).toFixed(2) }}</span>/month
+              <span v-if="devicePricing[device.id].pricingType === 'promo'" class="text-xs text-green-600 ml-1">(Promotional)</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Validation Errors Summary -->
-    <div v-if="hasValidationErrors && showValidation" class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <!-- Total Summary -->
+    <div v-if="hasSelectedDevices" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-blue-800 mb-3">Monthly Pricing Summary</h3>
+      
+      <!-- Selected Devices -->
+      <div class="space-y-2 mb-3">
+        <div 
+          v-for="device in selectedDevices" 
+          :key="device.id"
+          class="flex justify-between text-sm"
+        >
+          <span class="text-blue-700">
+            {{ device.name }} ({{ devicePricing[device.id].quantity }}x @ £{{ devicePricing[device.id].monthlyPrice.toFixed(2) }})
+            <span v-if="devicePricing[device.id].pricingType === 'promo'" class="text-xs">[Promo]</span>
+          </span>
+          <span class="font-medium text-blue-900">£{{ getDeviceTotal(device.id).toFixed(2) }}</span>
+        </div>
+      </div>
+      
+      <!-- Total -->
+      <div class="pt-3 border-t border-blue-300">
+        <div class="flex justify-between">
+          <span class="text-base font-medium text-blue-800">Total Monthly Cost:</span>
+          <span class="text-base font-bold text-blue-900">£{{ totalMonthlyCost.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Selection Warning -->
+    <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
       <div class="flex">
-        <svg class="h-5 w-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L10.586 11l-1.293 1.293a1 1 0 101.414 1.414L12 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        <svg class="h-5 w-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
         </svg>
         <div>
-          <h3 class="text-sm font-medium text-red-800">Pricing Validation Errors</h3>
-          <ul class="text-sm text-red-700 mt-1 list-disc list-inside">
-            <li v-if="consumerDebitError">{{ consumerDebitError }}</li>
-            <li v-if="consumerCreditError">{{ consumerCreditError }}</li>
-            <li v-if="commercialCardError">{{ commercialCardError }}</li>
-            <li v-if="authFeeError">{{ authFeeError }}</li>
-          </ul>
+          <h3 class="text-sm font-medium text-yellow-800">No Equipment Selected</h3>
+          <p class="text-sm text-yellow-700 mt-1">Please select at least one device and set its pricing to continue.</p>
         </div>
       </div>
     </div>
@@ -320,194 +160,95 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import { useFormStore } from '@/stores/formStore'
 import { useUiStore } from '@/stores/uiStore'
+import { equipmentData } from '@/data/equipmentData'
 
 const formStore = useFormStore()
 const uiStore = useUiStore()
 
-// Pricing constants
-const DEFAULTS = {
-  consumerDebit: 0.40,
-  consumerCredit: 0.65,
-  commercialCard: 2.00,
-  authFee: 0.04
-}
+// Filter only devices (exclude accessories)
+const availableDevices = computed(() => 
+  equipmentData.filter(item => 
+    item.category === 'countertop' || 
+    item.category === 'portable' || 
+    item.category === 'pos'
+  )
+)
 
-const MINIMUMS = {
-  consumerDebit: 0.25,
-  consumerCredit: 0.43,
-  commercialCard: 1.60,
-  authFee: 0.01
-}
+// Initialize device pricing
+const devicePricing = reactive({})
 
-// Local reactive data
-const consumerDebit = ref(formStore.pricing.consumerDebit)
-const consumerCredit = ref(formStore.pricing.consumerCredit)
-const commercialCard = ref(formStore.pricing.commercialCard)
-const authFee = ref(formStore.pricing.authorisationFee)
-const showValidation = ref(false)
-
-// Error states
-const consumerDebitError = ref('')
-const consumerCreditError = ref('')
-const commercialCardError = ref('')
-const authFeeError = ref('')
+availableDevices.value.forEach(device => {
+  const existing = formStore.pricing.devicePricing?.[device.id]
+  devicePricing[device.id] = {
+    quantity: existing?.quantity || 0,
+    monthlyPrice: existing?.monthlyPrice || (device.options?.[0]?.price || 0),
+    pricingType: existing?.pricingType || 'full'
+  }
+})
 
 // Computed properties
-const hasValidationErrors = computed(() => {
-  return !!(consumerDebitError.value || consumerCreditError.value || commercialCardError.value || authFeeError.value)
+const selectedDevices = computed(() => 
+  availableDevices.value.filter(device => devicePricing[device.id].quantity > 0)
+)
+
+const hasSelectedDevices = computed(() => selectedDevices.value.length > 0)
+
+const totalMonthlyCost = computed(() => {
+  return selectedDevices.value.reduce((total, device) => {
+    return total + getDeviceTotal(device.id)
+  }, 0)
 })
 
 const isStepValid = computed(() => {
-  return !hasValidationErrors.value &&
-         consumerDebit.value >= MINIMUMS.consumerDebit &&
-         consumerCredit.value >= MINIMUMS.consumerCredit &&
-         commercialCard.value >= MINIMUMS.commercialCard &&
-         authFee.value >= MINIMUMS.authFee
+  return hasSelectedDevices.value && totalMonthlyCost.value > 0
 })
 
-// Validation methods
-const validateConsumerDebit = () => {
-  if (!consumerDebit.value || consumerDebit.value < MINIMUMS.consumerDebit) {
-    consumerDebitError.value = `Consumer Debit rate must be at least ${MINIMUMS.consumerDebit}%`
-  } else {
-    consumerDebitError.value = ''
+// Methods
+const getDeviceQuantity = (deviceId) => {
+  return devicePricing[deviceId]?.quantity || 0
+}
+
+const getDeviceTotal = (deviceId) => {
+  const pricing = devicePricing[deviceId]
+  if (!pricing || pricing.quantity === 0) return 0
+  return pricing.quantity * pricing.monthlyPrice
+}
+
+const incrementQuantity = (deviceId) => {
+  devicePricing[deviceId].quantity++
+  updateDevicePricing(deviceId)
+}
+
+const decrementQuantity = (deviceId) => {
+  if (devicePricing[deviceId].quantity > 0) {
+    devicePricing[deviceId].quantity--
+    updateDevicePricing(deviceId)
   }
-  updateFormStore()
 }
 
-const validateConsumerCredit = () => {
-  if (!consumerCredit.value || consumerCredit.value < MINIMUMS.consumerCredit) {
-    consumerCreditError.value = `Consumer Credit rate must be at least ${MINIMUMS.consumerCredit}%`
-  } else {
-    consumerCreditError.value = ''
+const handleImageError = (event, deviceId) => {
+  console.error(`Failed to load image for device ${deviceId}`)
+  // Placeholder image
+  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iOCIgZmlsbD0iI0YzRjRGNiIvPgo8cGF0aCBkPSJNMjAgMjBINDRDNDUuMTA0NiAyMCA0NiAyMC44OTU0IDQ2IDIyVjQyQzQ2IDQzLjEwNDYgNDUuMTA0NiA0NCA0NCA0NEgyMEMxOC44OTU0IDQ0IDE4IDQzLjEwNDYgMTggNDJWMjJDMTggMjAuODk1NCAxOC44OTU0IDIwIDIwIDIwWiIgc3Ryb2tlPSIjOUIzMkI0IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTI2IDM0TDMwIDMwTDM2IDM2TDQwIDMyIiBzdHJva2U9IiM5QjMyQjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg=='
+}
+
+const updateDevicePricing = (deviceId) => {
+  // Update form store
+  if (!formStore.pricing.devicePricing) {
+    formStore.pricing.devicePricing = {}
   }
-  updateFormStore()
-}
-
-const validateCommercialCard = () => {
-  if (!commercialCard.value || commercialCard.value < MINIMUMS.commercialCard) {
-    commercialCardError.value = `Commercial Card rate must be at least ${MINIMUMS.commercialCard}%`
-  } else {
-    commercialCardError.value = ''
-  }
-  updateFormStore()
-}
-
-const validateAuthFee = () => {
-  if (!authFee.value || authFee.value < MINIMUMS.authFee) {
-    authFeeError.value = `Authorization fee must be at least £${MINIMUMS.authFee}`
-  } else {
-    authFeeError.value = ''
-  }
-  updateFormStore()
-}
-
-// Reset methods
-const resetConsumerDebit = () => {
-  consumerDebit.value = DEFAULTS.consumerDebit
-  validateConsumerDebit()
-}
-
-const resetConsumerCredit = () => {
-  consumerCredit.value = DEFAULTS.consumerCredit
-  validateConsumerCredit()
-}
-
-const resetCommercialCard = () => {
-  commercialCard.value = DEFAULTS.commercialCard
-  validateCommercialCard()
-}
-
-const resetAuthFee = () => {
-  authFee.value = DEFAULTS.authFee
-  validateAuthFee()
-}
-
-const resetAllToDefaults = () => {
-  consumerDebit.value = DEFAULTS.consumerDebit
-  consumerCredit.value = DEFAULTS.consumerCredit
-  commercialCard.value = DEFAULTS.commercialCard
-  authFee.value = DEFAULTS.authFee
   
-  // Validate all fields
-  validateConsumerDebit()
-  validateConsumerCredit()
-  validateCommercialCard()
-  validateAuthFee()
-}
-
-const setCompetitiveRates = () => {
-  // Set competitive rates (at minimum levels)
-  consumerDebit.value = MINIMUMS.consumerDebit
-  consumerCredit.value = MINIMUMS.consumerCredit
-  commercialCard.value = MINIMUMS.commercialCard
-  authFee.value = MINIMUMS.authFee
+  formStore.pricing.devicePricing[deviceId] = {
+    quantity: devicePricing[deviceId].quantity,
+    monthlyPrice: devicePricing[deviceId].monthlyPrice,
+    pricingType: devicePricing[deviceId].pricingType
+  }
   
-  // Validate all fields
-  validateConsumerDebit()
-  validateConsumerCredit()
-  validateCommercialCard()
-  validateAuthFee()
-}
-
-// Increment/Decrement methods for mobile buttons
-const incrementConsumerDebit = () => {
-  consumerDebit.value = Math.round((consumerDebit.value + 0.01) * 100) / 100
-  validateConsumerDebit()
-}
-
-const decrementConsumerDebit = () => {
-  if (consumerDebit.value > MINIMUMS.consumerDebit) {
-    consumerDebit.value = Math.round((consumerDebit.value - 0.01) * 100) / 100
-    validateConsumerDebit()
-  }
-}
-
-const incrementConsumerCredit = () => {
-  consumerCredit.value = Math.round((consumerCredit.value + 0.01) * 100) / 100
-  validateConsumerCredit()
-}
-
-const decrementConsumerCredit = () => {
-  if (consumerCredit.value > MINIMUMS.consumerCredit) {
-    consumerCredit.value = Math.round((consumerCredit.value - 0.01) * 100) / 100
-    validateConsumerCredit()
-  }
-}
-
-const incrementCommercialCard = () => {
-  commercialCard.value = Math.round((commercialCard.value + 0.01) * 100) / 100
-  validateCommercialCard()
-}
-
-const decrementCommercialCard = () => {
-  if (commercialCard.value > MINIMUMS.commercialCard) {
-    commercialCard.value = Math.round((commercialCard.value - 0.01) * 100) / 100
-    validateCommercialCard()
-  }
-}
-
-const incrementAuthFee = () => {
-  authFee.value = Math.round((authFee.value + 0.01) * 100) / 100
-  validateAuthFee()
-}
-
-const decrementAuthFee = () => {
-  if (authFee.value > MINIMUMS.authFee) {
-    authFee.value = Math.round((authFee.value - 0.01) * 100) / 100
-    validateAuthFee()
-  }
-}
-
-// Update form store
-const updateFormStore = () => {
-  formStore.pricing.consumerDebit = consumerDebit.value || 0
-  formStore.pricing.consumerCredit = consumerCredit.value || 0
-  formStore.pricing.commercialCard = commercialCard.value || 0
-  formStore.pricing.authorisationFee = authFee.value || 0
+  // Update legacy pricing fields for compatibility
+  formStore.pricing.totalMonthlyCost = totalMonthlyCost.value
   formStore.touch()
 }
 
@@ -516,30 +257,19 @@ watch(isStepValid, (newValue) => {
   uiStore.setStepValid(5, newValue)
 })
 
-// Show validation errors after user tries to proceed
-watch(() => uiStore.currentStep, (newStep, oldStep) => {
-  if (oldStep === 5 && newStep !== 5) {
-    showValidation.value = true
-  }
-})
-
 // Initialize validation
-validateConsumerDebit()
-validateConsumerCredit()
-validateCommercialCard()
-validateAuthFee()
 uiStore.setStepValid(5, isStepValid.value)
 </script>
 
 <style scoped>
 /* Hide default number input arrows/spinners */
-.number-input-no-arrows::-webkit-outer-spin-button,
-.number-input-no-arrows::-webkit-inner-spin-button {
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.number-input-no-arrows {
+input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
 }
 </style>

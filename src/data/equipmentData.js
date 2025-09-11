@@ -8,6 +8,49 @@ import cloverStationDuoImg from '@/assets/images/clover-station-duo.png'
 
 export const equipmentData = [
   {
+    id: 'clover-flex',
+    name: 'Clover Flex',
+    image: cloverFlexImg,
+    description: 'Portable handheld payment device',
+    category: 'portable',
+    options: [
+      {
+        type: 'rental',
+        price: 13.00,
+        period: 'month',
+        duration: 48,
+        description: 'MMSLLL48Month-48 Month Rental',
+        totalCost: 624.00
+      },
+      {
+        type: 'step_up',
+        price: 1.00,
+        period: 'month',
+        stepUpPrice: 30.00,
+        duration: 48,
+        description: 'Clover 48 Month-Step Up 6 Month',
+        totalCost: 78.00
+      }
+    ],
+    addOns: [
+      {
+        id: 'amex',
+        name: 'Clover American Express',
+        included: false
+      },
+      {
+        id: 'moto',
+        name: 'Clover MOTO',
+        included: false
+      },
+      {
+        id: 'cashback',
+        name: 'Purchase with Cashback',
+        included: false
+      }
+    ]
+  },
+  {
     id: 'clover-mini',
     name: 'Clover Mini',
     image: cloverMiniImg,
@@ -68,49 +111,6 @@ export const equipmentData = [
     ],
     addOns: [],
     features: ['Quantity selector', 'Price adjustment']
-  },
-  {
-    id: 'clover-flex',
-    name: 'Clover Flex',
-    image: cloverFlexImg,
-    description: 'Portable handheld payment device',
-    category: 'portable',
-    options: [
-      {
-        type: 'rental',
-        price: 13.00,
-        period: 'month',
-        duration: 48,
-        description: 'MMSLLL48Month-48 Month Rental',
-        totalCost: 624.00
-      },
-      {
-        type: 'step_up',
-        price: 1.00,
-        period: 'month',
-        stepUpPrice: 30.00,
-        duration: 48,
-        description: 'Clover 48 Month-Step Up 6 Month',
-        totalCost: 78.00
-      }
-    ],
-    addOns: [
-      {
-        id: 'amex',
-        name: 'Clover American Express',
-        included: false
-      },
-      {
-        id: 'moto',
-        name: 'Clover MOTO',
-        included: false
-      },
-      {
-        id: 'cashback',
-        name: 'Purchase with Cashback',
-        included: false
-      }
-    ]
   },
   {
     id: 'clover-station-duo',

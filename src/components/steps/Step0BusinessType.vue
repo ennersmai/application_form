@@ -38,39 +38,74 @@
       </div>
     </div>
 
-    <!-- Company Number Input (only for Limited Company) -->
+    <!-- Company Name Search (only for Limited Company) -->
     <div v-if="businessType === 'limited_company'" class="space-y-4">
       <div>
-        <label for="companyNumber" class="block text-sm font-medium text-gray-700 mb-2">
-          Company Number
+        <label for="companySearch" class="block text-sm font-medium text-gray-700 mb-2">
+          Company Name
         </label>
         <div class="relative">
           <input
-            id="companyNumber"
-            v-model="companyNumber"
+            id="companySearch"
+            v-model="companySearch"
             type="text"
-            placeholder="e.g., 08123456 or AB123456"
+            placeholder="Enter company name to search"
             class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            :class="{ 'border-red-300': companyNumberError }"
-            @input="handleCompanyNumberInput"
+            :class="{ 'border-red-300': searchError }"
+            @input="handleSearchInput"
+            @keyup.enter="searchCompanies"
           />
           <button
-            v-if="companyNumber && !isLoading"
-            @click="lookupCompany"
-            :disabled="!isValidCompanyNumber"
+            v-if="companySearch && !isLoading && !isSearching"
+            @click="searchCompanies"
+            :disabled="!companySearch.trim() || companySearch.trim().length < 2"
             class="absolute inset-y-0 right-0 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-r-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Lookup
+            Search
           </button>
-          <div v-if="isLoading" class="absolute inset-y-0 right-0 flex items-center pr-3">
+          <div v-if="isSearching" class="absolute inset-y-0 right-0 flex items-center pr-3">
             <svg class="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
         </div>
-        <p v-if="companyNumberError" class="mt-1 text-sm text-red-600">{{ companyNumberError }}</p>
-        <p v-else class="mt-1 text-sm text-gray-500">Enter the company registration number to verify directors</p>
+        <p v-if="searchError" class="mt-1 text-sm text-red-600">{{ searchError }}</p>
+        <p v-else class="mt-1 text-sm text-gray-500">Search for your company by name</p>
+      </div>
+
+      <!-- Search Results -->
+      <div v-if="searchResults.length > 0" class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">Select your company</label>
+        <div class="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-2">
+          <label 
+            v-for="company in searchResults" 
+            :key="company.company_number"
+            class="flex items-start p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
+            :class="{ 'bg-primary-50 border-primary-300': selectedCompany?.company_number === company.company_number }"
+          >
+            <input
+              v-model="selectedCompany"
+              type="radio"
+              :value="company"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 mt-1"
+              @change="selectCompany(company)"
+            />
+            <div class="ml-3 flex-1">
+              <p class="text-sm font-medium text-gray-900">{{ company.company_name }}</p>
+              <p class="text-xs text-gray-500">Company No: {{ company.company_number }} • Status: {{ company.company_status }}</p>
+              <p v-if="company.address_snippet" class="text-xs text-gray-500 mt-1">{{ company.address_snippet }}</p>
+            </div>
+          </label>
+        </div>
+        <button 
+          v-if="selectedCompany"
+          @click="lookupCompanyDetails"
+          :disabled="isLoading"
+          class="w-full px-4 py-2 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+        >
+          {{ isLoading ? 'Loading Details...' : 'Get Company Details' }}
+        </button>
       </div>
     </div>
 
@@ -158,13 +193,14 @@ const companyNumber = ref(formStore.businessTypeCheck.companyNumber)
 const companyDetails = ref(formStore.businessTypeCheck.companyDetails)
 const directorsVerified = ref(formStore.businessTypeCheck.directorsVerified)
 const isLoading = ref(false)
+const isSearching = ref(false)
 const error = ref('')
-const companyNumberError = ref('')
+const searchError = ref('')
+const companySearch = ref('')
+const searchResults = ref([])
+const selectedCompany = ref(null)
 
 // Computed properties
-const isValidCompanyNumber = computed(() => {
-  return companiesHouseService.validateCompanyNumber(companyNumber.value)
-})
 
 const isStepValid = computed(() => {
   if (businessType.value === 'sole_trader') {
@@ -180,34 +216,69 @@ const updateStepValidation = () => {
   uiStore.setStepValid(0, isStepValid.value)
 }
 
-const handleCompanyNumberInput = () => {
-  companyNumberError.value = ''
+const handleSearchInput = () => {
+  searchError.value = ''
   error.value = ''
+  searchResults.value = []
+  selectedCompany.value = null
   
-  // Reset company details when number changes
+  // Reset company details when search changes
   if (companyDetails.value) {
     companyDetails.value = null
     directorsVerified.value = false
   }
 }
 
-const lookupCompany = async () => {
-  if (!isValidCompanyNumber.value) {
-    companyNumberError.value = 'Please enter a valid company number'
+const searchCompanies = async () => {
+  const query = companySearch.value.trim()
+  if (!query || query.length < 2) {
+    searchError.value = 'Please enter at least 2 characters to search'
     return
   }
 
-  isLoading.value = true
+  isSearching.value = true
+  searchError.value = ''
   error.value = ''
-  companyNumberError.value = ''
 
   try {
-    const result = await companiesHouseService.getCompanyDetails(companyNumber.value)
+    const result = await companiesHouseService.searchCompaniesByName(query)
+    
+    if (result.success) {
+      searchResults.value = result.data.companies || []
+      if (searchResults.value.length === 0) {
+        searchError.value = 'No companies found matching your search'
+      }
+    } else {
+      searchError.value = result.error
+      searchResults.value = []
+    }
+  } catch (err) {
+    searchError.value = 'An unexpected error occurred. Please try again.'
+    console.error('Company search error:', err)
+  } finally {
+    isSearching.value = false
+  }
+}
+
+const selectCompany = (company) => {
+  selectedCompany.value = company
+  companyNumber.value = company.company_number
+  error.value = ''
+}
+
+const lookupCompanyDetails = async () => {
+  if (!selectedCompany.value) return
+
+  isLoading.value = true
+  error.value = ''
+
+  try {
+    const result = await companiesHouseService.getCompanyDetails(selectedCompany.value.company_number)
     
     if (result.success) {
       companyDetails.value = result.data
       formStore.setCompanyDetails(result.data)
-      formStore.businessTypeCheck.companyNumber = companyNumber.value
+      formStore.businessTypeCheck.companyNumber = selectedCompany.value.company_number
       
       // Auto-check directors verified if no directors (shouldn't happen for active companies)
       if (!result.data.officers || result.data.officers.length === 0) {
@@ -239,10 +310,13 @@ watch(businessType, (newValue) => {
   // Reset company-specific data when switching to sole trader
   if (newValue === 'sole_trader') {
     companyNumber.value = ''
+    companySearch.value = ''
+    searchResults.value = []
+    selectedCompany.value = null
     companyDetails.value = null
     directorsVerified.value = false
     error.value = ''
-    companyNumberError.value = ''
+    searchError.value = ''
   }
   
   updateStepValidation()

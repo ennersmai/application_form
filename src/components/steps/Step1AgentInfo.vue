@@ -53,7 +53,7 @@
             Is this application urgent?
           </label>
           <p class="text-sm text-gray-600 mt-1">
-            Urgent applications are processed within 24 hours for an additional £20 fee.
+            Urgent applications are processed within 20 minutes for an additional £20 fee.
           </p>
           <div v-if="isUrgent" class="mt-2 p-2 bg-blue-100 rounded text-sm text-blue-800">
             <strong>Additional Fee:</strong> £20.00 urgent processing fee will be added to the final summary.
