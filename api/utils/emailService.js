@@ -168,8 +168,14 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     console.log('=== DEBUGGING SENDER.NET REQUEST ===')
     console.log('API URL:', apiUrl)
     console.log('API Token (first 10 chars):', SENDER_CONFIG.apiToken?.substring(0, 10) + '...')
+    console.log('API Token (last 10 chars):', '...' + SENDER_CONFIG.apiToken?.substring(SENDER_CONFIG.apiToken.length - 10))
+    console.log('API Token length:', SENDER_CONFIG.apiToken?.length)
     console.log('FROM email:', EMAIL_CONFIG.from)
     console.log('TO email:', EMAIL_CONFIG.to)
+    console.log('Environment variables:')
+    console.log('- EMAIL_FROM:', process.env.EMAIL_FROM)
+    console.log('- EMAIL_TO:', process.env.EMAIL_TO) 
+    console.log('- SENDER_API_TOKEN length:', process.env.SENDER_API_TOKEN?.length)
     
     // Log the EXACT payload being sent
     console.log('EXACT PAYLOAD BEING SENT:')
