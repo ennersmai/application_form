@@ -377,8 +377,8 @@ const lookupAddresses = async () => {
       selectedAddressIndex.value = -1
       showManualEntry.value = false
       
-      // Update postcode in address
-      tradingAddress.value.postcode = result.data.postcode
+      // Keep the original postcode used for lookup
+      tradingAddress.value.postcode = addressService.formatPostcode(postcodeLookup.value)
       updateAddress()
     } else {
       addressError.value = result.error
@@ -395,14 +395,19 @@ const lookupAddresses = async () => {
 const selectAddress = (index) => {
   if (index >= 0 && index < addresses.value.length) {
     const selectedAddress = addresses.value[index]
+    console.log('Selected address:', selectedAddress)
+    
     tradingAddress.value = {
-      line1: selectedAddress.line1,
-      line2: selectedAddress.line2,
-      city: selectedAddress.city,
-      county: selectedAddress.county,
-      postcode: selectedAddress.postcode || tradingAddress.value.postcode,
+      line1: selectedAddress.line1 || '',
+      line2: selectedAddress.line2 || '',
+      city: selectedAddress.city || '',
+      county: selectedAddress.county || '',
+      postcode: selectedAddress.postcode || addressService.formatPostcode(postcodeLookup.value) || 'SW1A 1AA',
       country: 'UK'
     }
+    
+    console.log('Updated trading address:', tradingAddress.value)
+    selectedAddressIndex.value = index
     updateAddress()
   }
 }
