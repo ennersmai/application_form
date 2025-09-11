@@ -162,11 +162,23 @@ const isValidAccountNumber = computed(() => {
 })
 
 const isStepValid = computed(() => {
-  return accountName.value.length > 0 && 
-         isValidSortCode.value && 
+  const valid = accountName.value.length > 0 &&
+         isValidSortCode.value &&
          isValidAccountNumber.value &&
-         !sortCodeError.value && 
+         !sortCodeError.value &&
          !accountNumberError.value
+
+  console.log('Banking validation:', {
+    accountName: accountName.value,
+    accountNameLength: accountName.value.length,
+    isValidSortCode: isValidSortCode.value,
+    isValidAccountNumber: isValidAccountNumber.value,
+    sortCodeError: sortCodeError.value,
+    accountNumberError: accountNumberError.value,
+    isStepValid: valid
+  })
+
+  return valid
 })
 
 // Methods
@@ -236,7 +248,12 @@ const updateBanking = () => {
 
 // Auto-populate account name from legal name
 const updateAccountName = () => {
+  console.log('updateAccountName called:', { legalName: legalName.value, accountName: accountName.value })
   if (legalName.value && legalName.value !== accountName.value) {
+    accountName.value = legalName.value
+    updateBanking()
+  } else if (!accountName.value && legalName.value) {
+    // Ensure account name is set even if they're the same
     accountName.value = legalName.value
     updateBanking()
   }
@@ -246,12 +263,12 @@ const updateAccountName = () => {
 watch(legalName, updateAccountName)
 
 watch(isStepValid, (newValue) => {
-  uiStore.setStepValid(7, newValue)
+  uiStore.setStepValid(6, newValue)
 })
 
 // Show validation errors after user tries to proceed
 watch(() => uiStore.currentStep, (newStep, oldStep) => {
-  if (oldStep === 7 && newStep !== 7) {
+  if (oldStep === 6 && newStep !== 6) {
     showValidation.value = true
     validateSortCode()
     validateAccountNumber()
@@ -260,9 +277,11 @@ watch(() => uiStore.currentStep, (newStep, oldStep) => {
 
 // Initialize
 onMounted(() => {
+  console.log('Banking step mounted')
   updateAccountName()
   validateSortCode()
   validateAccountNumber()
-  uiStore.setStepValid(7, isStepValid.value)
+  uiStore.setStepValid(6, isStepValid.value)
+  console.log('Banking step initialized, isStepValid:', isStepValid.value)
 })
 </script>
