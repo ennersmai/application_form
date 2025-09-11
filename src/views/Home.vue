@@ -6,7 +6,7 @@
         <div class="flex justify-between h-16">
           <div class="flex items-center">
             <img 
-              src="images/the_payments_expert.png" 
+              src="/images/the_payments_expert.png" 
               alt="The Payments Expert" 
               class="h-8 sm:h-10 w-auto"
               @error="handleLogoError"

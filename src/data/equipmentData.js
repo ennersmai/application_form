@@ -3,7 +3,7 @@ export const equipmentData = [
   {
     id: 'clover-mini',
     name: 'Clover Mini',
-    image: 'images/clover-mini.png',
+    image: '/images/clover-mini.png',
     description: 'Compact countertop payment terminal',
     category: 'countertop',
     options: [
@@ -30,7 +30,7 @@ export const equipmentData = [
   {
     id: 'clover-cash-drawer',
     name: 'Clover Cash Drawer',
-    image: 'images/clover-cash-drawer.png',
+    image: '/images/clover-cash-drawer.png',
     description: 'Secure cash storage solution',
     category: 'accessory',
     options: [
@@ -47,7 +47,7 @@ export const equipmentData = [
   {
     id: 'clover-kitchen-printer',
     name: 'Clover Kitchen Printer',
-    image: 'images/clover-kitchen-printer.png',
+    image: '/images/clover-kitchen-printer.png',
     description: 'Kitchen receipt printer for restaurants',
     category: 'printer',
     options: [
@@ -65,7 +65,7 @@ export const equipmentData = [
   {
     id: 'clover-flex',
     name: 'Clover Flex',
-    image: 'images/clover-flex.png',
+    image: '/images/clover-flex.png',
     description: 'Portable handheld payment device',
     category: 'portable',
     options: [
@@ -108,7 +108,7 @@ export const equipmentData = [
   {
     id: 'clover-station-duo',
     name: 'Clover Station Duo',
-    image: 'images/clover-station-duo.png',
+    image: '/images/clover-station-duo.png',
     description: 'Dual-screen POS system for full-service businesses',
     category: 'pos_system',
     options: [
