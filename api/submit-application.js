@@ -55,7 +55,10 @@ export default async function handler(req, res) {
 
     // Step 6: Validate application data
     const validation = validateApplicationData(applicationData)
+    console.log('Validation result:', validation)
+    console.log('Application data structure:', JSON.stringify(applicationData, null, 2))
     if (!validation.valid) {
+      console.error('Validation failed with errors:', validation.errors)
       return res.status(400).json({ 
         error: 'Invalid application data', 
         details: validation.errors 
