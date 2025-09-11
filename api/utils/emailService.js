@@ -43,6 +43,18 @@ export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
     }
   }
   
+  // If all endpoints failed, provide fallback logging
+  console.error('All Sender.net endpoints failed. Logging email for manual processing...')
+  console.log('=== EMAIL THAT FAILED TO SEND ===')
+  console.log('TO:', EMAIL_CONFIG.to, EMAIL_CONFIG.cc ? `, CC: ${EMAIL_CONFIG.cc}` : '')
+  console.log('FROM:', EMAIL_CONFIG.from)
+  console.log('SUBJECT:', `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`)
+  console.log('APPLICATION ID:', applicationData.applicationId)
+  console.log('BUSINESS NAME:', applicationData.businessInfo.legalName)
+  console.log('AGENT:', user.email)
+  console.log('SUBMITTED:', new Date().toISOString())
+  console.log('=== END EMAIL LOG ===')
+  
   throw lastError || new Error('All Sender.net endpoints failed')
 }
 
@@ -106,6 +118,8 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     const url = apiUrl
     console.log('Sender.net API URL:', url)
     console.log('Sender.net API Token exists:', !!SENDER_CONFIG.apiToken)
+    console.log('Sender.net API Token (first 10 chars):', SENDER_CONFIG.apiToken?.substring(0, 10) + '...')
+    console.log('Email FROM domain:', EMAIL_CONFIG.from)
     console.log('Email payload:', JSON.stringify(emailPayload, null, 2))
     
     const response = await fetch(url, {
@@ -130,7 +144,20 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       }
     } else {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Sender.net API returned status ${response.status}: ${errorData.message || response.statusText}`)
+      console.log('Sender.net error response body:', errorData)
+      
+      // Provide specific error messages for common issues
+      if (response.status === 403) {
+        throw new Error(`Sender.net API permission denied (403). Possible issues:
+        1. API token doesn't have transactional email permissions
+        2. Sender domain '${EMAIL_CONFIG.from}' is not verified
+        3. Account needs transactional email feature enabled
+        Error: ${errorData.message || response.statusText}`)
+      } else if (response.status === 401) {
+        throw new Error(`Sender.net API authentication failed (401). Check API token validity. Error: ${errorData.message || response.statusText}`)
+      } else {
+        throw new Error(`Sender.net API returned status ${response.status}: ${errorData.message || response.statusText}`)
+      }
     }
 
   } catch (error) {
