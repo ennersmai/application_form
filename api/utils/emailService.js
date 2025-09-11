@@ -199,9 +199,27 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
         }
       }
     } else {
-      console.log('TO valid:', emailRegex.test(emailPayload.to), emailPayload.to)
-      if (!emailRegex.test(emailPayload.to)) {
-        throw new Error(`Invalid TO email format: ${emailPayload.to}`)
+      console.log('TO is string:', emailPayload.to)
+      // Check if it contains comma (multiple emails in one string - not allowed)
+      if (emailPayload.to && emailPayload.to.includes(',')) {
+        console.log('❌ TO field contains comma-separated emails - this is not supported by Sender.net')
+        console.log('❌ Splitting emails and using array format instead')
+        const emails = emailPayload.to.split(',').map(e => e.trim())
+        emailPayload.to = emails
+        console.log('✅ Converted to array:', emailPayload.to)
+        
+        // Re-validate as array
+        for (let i = 0; i < emailPayload.to.length; i++) {
+          console.log(`TO[${i}] valid:`, emailRegex.test(emailPayload.to[i]), emailPayload.to[i])
+          if (!emailRegex.test(emailPayload.to[i])) {
+            throw new Error(`Invalid TO email format at index ${i}: ${emailPayload.to[i]}`)
+          }
+        }
+      } else {
+        console.log('TO valid:', emailRegex.test(emailPayload.to), emailPayload.to)
+        if (!emailRegex.test(emailPayload.to)) {
+          throw new Error(`Invalid TO email format: ${emailPayload.to}`)
+        }
       }
     }
     
