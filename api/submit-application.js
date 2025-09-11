@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
-import { generateApplicationPDF } from './utils/pdfService.js'
-import { sendSubmissionEmail } from './utils/emailService.js'
-import { validateApplicationData } from './utils/validation.js'
+const { createClient } = require('@supabase/supabase-js')
+const { generateApplicationPDF } = require('./utils/pdfService.js')
+const { sendSubmissionEmail } = require('./utils/emailService.js')
+const { validateApplicationData } = require('./utils/validation.js')
 
 // This is a Vercel serverless function
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -120,9 +120,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Submission error:', error)
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     })
   }
 }
+
+// CommonJS exports
+module.exports = handler

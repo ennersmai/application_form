@@ -14,7 +14,7 @@ const EMAIL_CONFIG = {
   replyTo: process.env.EMAIL_REPLY_TO
 }
 
-export async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
+async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
   // Based on Sender.net API documentation, use transactional campaigns for one-off emails
   const possibleEndpoints = [
     'https://api.sender.net/v2/transactional',
@@ -460,4 +460,9 @@ function formatContractType(contractType) {
     'purchase': 'Upfront Purchase'
   }
   return contractTypes[contractType] || contractType
+}
+
+// CommonJS exports
+module.exports = {
+  sendSubmissionEmail
 }

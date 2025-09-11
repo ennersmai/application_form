@@ -1,5 +1,5 @@
 // Server-side validation for application data
-export function validateApplicationData(data) {
+function validateApplicationData(data) {
   const errors = []
 
   try {
@@ -200,4 +200,13 @@ function isValidUKSortCode(sortCode) {
 function isValidUKAccountNumber(accountNumber) {
   if (!accountNumber) return false
   return accountNumber.length === 8 && /^\d{8}$/.test(accountNumber)
+}
+
+// CommonJS exports
+module.exports = {
+  validateApplicationData,
+  isValidEmail,
+  isValidUKPostcode,
+  isValidUKSortCode,
+  isValidUKAccountNumber
 }

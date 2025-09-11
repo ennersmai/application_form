@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit'
 
-export async function generateApplicationPDF(applicationData) {
+async function generateApplicationPDF(applicationData) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
@@ -209,4 +209,9 @@ function formatContractType(contractType) {
     'purchase': 'Upfront Purchase'
   }
   return contractTypes[contractType] || contractType
+}
+
+// CommonJS exports
+module.exports = {
+  generateApplicationPDF
 }
