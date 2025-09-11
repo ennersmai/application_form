@@ -137,12 +137,20 @@
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   Failed
                 </span>
-                <button
-                  @click="retryApplication(app.applicationId)"
-                  class="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Retry
-                </button>
+                <div class="flex space-x-2">
+                  <button
+                    @click="retryApplication(app.applicationId)"
+                    class="text-sm text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded border border-primary-600 hover:bg-primary-50"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    @click="deleteApplication(app.applicationId)"
+                    class="text-sm text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded border border-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
