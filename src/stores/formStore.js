@@ -71,14 +71,7 @@ export const useFormStore = defineStore('form', {
       authorisationFee: 0.04
     },
 
-    // Step 6: Equipment
-    equipment: {
-      selectedDevices: [],
-      motoEnabled: false,
-      cashbackEnabled: false
-    },
-
-    // Step 7: Banking
+    // Step 6: Banking
     banking: {
       accountName: '', // Auto-populated from legal name
       sortCode: '',
@@ -102,12 +95,6 @@ export const useFormStore = defineStore('form', {
       return state.principals.filter(p => p.ownershipPercentage > 25)
     },
 
-    // Calculate total equipment cost
-    totalEquipmentCost: (state) => {
-      return state.equipment.selectedDevices.reduce((total, device) => {
-        return total + (device.price * device.quantity)
-      }, 0)
-    },
 
     // Check if urgent fee applies
     urgentFee: (state) => {
@@ -195,21 +182,6 @@ export const useFormStore = defineStore('form', {
       this.businessInfo.tradingAddress = { ...this.businessInfo.tradingAddress, ...address }
     },
 
-    // Add/update equipment
-    addEquipment(device) {
-      const existing = this.equipment.selectedDevices.find(d => d.id === device.id)
-      if (existing) {
-        existing.quantity = device.quantity
-        existing.option = device.option
-      } else {
-        this.equipment.selectedDevices.push(device)
-      }
-    },
-
-    // Remove equipment
-    removeEquipment(deviceId) {
-      this.equipment.selectedDevices = this.equipment.selectedDevices.filter(d => d.id !== deviceId)
-    },
 
     // Initialize form with agent details
     initializeWithAgent(user) {
@@ -240,9 +212,7 @@ export const useFormStore = defineStore('form', {
         businessInfo: this.businessInfo,
         tradingInfo: this.tradingInfo,
         pricing: this.pricing,
-        equipment: this.equipment,
         banking: this.banking,
-        totalEquipmentCost: this.totalEquipmentCost,
         urgentFee: this.urgentFee,
         createdAt: this.createdAt,
         submittedAt: new Date().toISOString()

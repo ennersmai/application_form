@@ -209,52 +209,6 @@
       <div v-else class="text-sm text-gray-500">No pricing configured</div>
     </div>
 
-    <!-- Equipment -->
-    <div class="bg-white border border-gray-200 rounded-lg p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-medium text-gray-900">Equipment</h3>
-        <button
-          @click="editSection(6)"
-          class="text-sm text-primary-600 hover:text-primary-700 font-medium"
-        >
-          Edit
-        </button>
-      </div>
-      <div v-if="formStore.equipment.selectedDevices.length > 0" class="space-y-2">
-        <div
-          v-for="device in formStore.equipment.selectedDevices"
-          :key="device.id"
-          class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
-        >
-          <div>
-            <span class="font-medium">{{ device.name }}</span>
-            <span class="text-gray-600 ml-2">({{ device.quantity }}x)</span>
-            <div class="text-xs text-gray-500 mt-1">{{ device.optionDescription }}</div>
-          </div>
-          <span class="font-medium">£{{ (device.totalCost || 0).toFixed(2) }}</span>
-        </div>
-        <div class="border-t border-gray-200 pt-2 flex justify-between font-medium">
-          <span>Equipment Total:</span>
-          <span>£{{ equipmentTotal.toFixed(2) }}</span>
-        </div>
-      </div>
-      <div v-else class="text-sm text-gray-500">No equipment selected</div>
-      
-      <!-- Add-on Services -->
-      <div v-if="formStore.equipment.motoEnabled || formStore.equipment.cashbackEnabled" class="mt-3 pt-3 border-t border-gray-200">
-        <div class="text-sm">
-          <span class="text-gray-600">Add-on Services:</span>
-          <div class="mt-1 space-x-4">
-            <span v-if="formStore.equipment.motoEnabled" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-              MOTO
-            </span>
-            <span v-if="formStore.equipment.cashbackEnabled" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-              Cashback
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Banking Details -->
     <div class="bg-white border border-gray-200 rounded-lg p-4">
@@ -288,16 +242,16 @@
       <h3 class="text-lg font-medium text-primary-900 mb-3">Application Summary</h3>
       <div class="space-y-2 text-sm">
         <div class="flex justify-between">
-          <span class="text-primary-700">Equipment Total:</span>
-          <span class="font-medium text-primary-900">£{{ equipmentTotal.toFixed(2) }}</span>
+          <span class="text-primary-700">Monthly Equipment Cost:</span>
+          <span class="font-medium text-primary-900">£{{ totalMonthlyCost.toFixed(2) }}/month</span>
         </div>
         <div v-if="formStore.agentInfo.isUrgent" class="flex justify-between">
           <span class="text-primary-700">Urgent Processing Fee:</span>
           <span class="font-medium text-primary-900">£20.00</span>
         </div>
         <div class="border-t border-primary-200 pt-2 flex justify-between font-bold text-base">
-          <span class="text-primary-800">Total Fees:</span>
-          <span class="text-primary-900">£{{ totalFees.toFixed(2) }}</span>
+          <span class="text-primary-800">Total Monthly Cost:</span>
+          <span class="text-primary-900">£{{ totalFees.toFixed(2) }}/month</span>
         </div>
       </div>
     </div>
@@ -405,14 +359,8 @@ const totalMonthlyCost = computed(() => {
   }, 0)
 })
 
-const equipmentTotal = computed(() => {
-  return formStore.equipment.selectedDevices.reduce((total, device) => {
-    return total + (device.totalCost || 0)
-  }, 0)
-})
-
 const totalFees = computed(() => {
-  let total = equipmentTotal.value
+  let total = totalMonthlyCost.value
   if (formStore.agentInfo.isUrgent) {
     total += 20.00
   }
