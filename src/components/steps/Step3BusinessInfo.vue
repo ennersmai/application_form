@@ -82,14 +82,13 @@
       <!-- Postcode Lookup -->
       <div>
         <label for="postcode" class="block text-sm font-medium text-gray-700 mb-2">
-          Lookup Postcode *
+          Lookup Postcode
         </label>
         <div class="flex space-x-2">
           <input
             id="postcode"
             v-model="postcodeLookup"
             type="text"
-            required
             class="flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
             :class="{ 'border-red-300': postcodeError }"
             placeholder="e.g., SW1A 1AA"
