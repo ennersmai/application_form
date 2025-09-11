@@ -8,10 +8,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { query, top = 10 } = req.body
+    const { query, postcode, top = 10 } = req.body
+    const searchQuery = query || postcode
 
-    if (!query) {
-      return res.status(400).json({ error: 'Search query is required' })
+    if (!searchQuery) {
+      return res.status(400).json({ error: 'Search query or postcode is required' })
     }
 
     if (!API_KEY) {
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
 
     // Make request to GetAddress API using native fetch
     // Try autocomplete endpoint first - /autocomplete/{query}?api-key={key}
-    const url = new URL(`${GETADDRESS_API_BASE}/autocomplete/${encodeURIComponent(query)}`)
+    const url = new URL(`${GETADDRESS_API_BASE}/autocomplete/${encodeURIComponent(searchQuery)}`)
     url.searchParams.append('api-key', API_KEY)
     url.searchParams.append('all', 'true')
     url.searchParams.append('top', top.toString())
@@ -44,17 +45,15 @@ export default async function handler(req, res) {
     const data = await response.json()
 
     // GetAddress autocomplete returns an array of suggestions directly
-    const suggestions = Array.isArray(data.suggestions) ? data.suggestions.map((suggestion, index) => ({
+    const addresses = Array.isArray(data.suggestions) ? data.suggestions.map((suggestion, index) => ({
       id: suggestion.id || `addr_${index}`,
-      address: suggestion.address || suggestion.text || suggestion,
+      formatted_address: suggestion.address || suggestion.text || suggestion,
       url: suggestion.url || null
     })) : []
 
     res.status(200).json({
       success: true,
-      data: {
-        suggestions: suggestions
-      }
+      addresses: addresses
     })
 
   } catch (error) {
@@ -63,22 +62,26 @@ export default async function handler(req, res) {
     if (error.message?.includes('400')) {
       return res.status(200).json({
         success: false,
-        error: 'Invalid search query. Please try a different address.'
+        error: 'Invalid search query. Please try a different address.',
+        addresses: []
       })
     } else if (error.message?.includes('401')) {
       return res.status(500).json({
         success: false,
-        error: 'GetAddress API key is invalid or missing.'
+        error: 'GetAddress API key is invalid or missing.',
+        addresses: []
       })
     } else if (error.message?.includes('429')) {
       return res.status(200).json({
         success: false,
-        error: 'Too many requests. Please wait a moment and try again.'
+        error: 'Too many requests. Please wait a moment and try again.',
+        addresses: []
       })
     } else {
       return res.status(500).json({
         success: false,
-        error: error.message || 'Failed to lookup address. Please try again.'
+        error: error.message || 'Failed to lookup address. Please try again.',
+        addresses: []
       })
     }
   }

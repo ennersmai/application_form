@@ -362,6 +362,7 @@
 import { ref, computed, watch } from 'vue'
 import { useFormStore } from '@/stores/formStore'
 import { useUiStore } from '@/stores/uiStore'
+import { addressService } from '@/services/addressService'
 
 const formStore = useFormStore()
 const uiStore = useUiStore()
@@ -482,29 +483,24 @@ const lookupHomeAddress = async (principalId) => {
   lookupState.value[principalId].addresses = []
 
   try {
-    const response = await fetch('/api/getaddress', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        postcode: principal.homeAddress.postcode
-      })
-    })
+    const result = await addressService.getAddresses(principal.homeAddress.postcode)
 
-    const data = await response.json()
+    if (result.success) {
+      // Format addresses for display and selection
+      lookupState.value[principalId].addresses = result.data.addresses.map(addr => ({
+        ...addr,
+        formatted_address: addr.formatted || addr.address
+      }))
 
-    if (response.ok && data.success && data.addresses) {
-      lookupState.value[principalId].addresses = data.addresses
-      if (data.addresses.length === 0) {
+      if (result.data.addresses.length === 0) {
         lookupState.value[principalId].error = 'No addresses found for this postcode'
       }
     } else {
-      lookupState.value[principalId].error = data.error || 'Address lookup failed'
+      lookupState.value[principalId].error = result.error || 'Address lookup failed'
     }
   } catch (error) {
     console.error('Address lookup error:', error)
-    lookupState.value[principalId].error = 'Address lookup service unavailable'
+    lookupState.value[principalId].error = 'Address lookup failed. Please try again.'
   } finally {
     lookupState.value[principalId].loading = false
   }
@@ -515,9 +511,9 @@ const selectHomeAddress = (principalId, address) => {
   if (!principal) return
 
   // Update the principal's home address
-  principal.homeAddress.line1 = address.line_1 || ''
-  principal.homeAddress.line2 = address.line_2 || ''
-  principal.homeAddress.city = address.town_or_city || ''
+  principal.homeAddress.line1 = address.line1 || ''
+  principal.homeAddress.line2 = address.line2 || ''
+  principal.homeAddress.city = address.city || ''
   principal.homeAddress.county = address.county || ''
   principal.homeAddress.postcode = address.postcode || principal.homeAddress.postcode
 
