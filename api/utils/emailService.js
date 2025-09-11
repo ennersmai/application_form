@@ -20,84 +20,64 @@ const SENDER_CAMPAIGN_ID = process.env.SENDER_CAMPAIGN_ID
 const SENDER_WEBHOOK_URL = process.env.SENDER_WEBHOOK_URL
 const SENDER_WEBHOOK_TOKEN = process.env.SENDER_WEBHOOK_TOKEN
 
+// Send via SendGrid Web API
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY
+
 async function sendSubmissionEmail(applicationData, pdfBuffer, user) {
-  // Based on Sender.net API documentation, use transactional campaigns for one-off emails
-  const possibleEndpoints = [
-    // Transactional endpoints (may require higher plan/permissions)
-    'https://api.sender.net/v2/transactional',
-    'https://api.sender.net/v2/transactional/send',
-    'https://api.sender.net/v2/emails/transactional',
-    'https://api.sender.net/v2/campaigns/transactional'
-  ]
-  
-  let lastError = null
-  
-  // Optional fastest path: send via webhook if configured
-  if (SENDER_WEBHOOK_URL) {
-    try {
-      console.log('Trying webhook send at:', SENDER_WEBHOOK_URL)
-      const result = await attemptSendWebhook(SENDER_WEBHOOK_URL, applicationData, pdfBuffer, user)
-      if (result.success) {
-        console.log('Success via webhook')
-        return result
-      }
-    } catch (error) {
-      console.log('Webhook send failed:', error.message)
-      lastError = error
-    }
+  if (!SENDGRID_API_KEY) throw new Error('SendGrid API key not configured (SENDGRID_API_KEY)')
+  if (!EMAIL_CONFIG?.from) throw new Error('EMAIL_FROM not configured')
+  if (!EMAIL_CONFIG?.to) throw new Error('EMAIL_TO not configured')
+
+  const { html, text } = generateEmailContent(applicationData)
+
+  const recipients = []
+  recipients.push({ email: EMAIL_CONFIG.to })
+  if (EMAIL_CONFIG.cc) {
+    const ccList = EMAIL_CONFIG.cc.split(',').map(e => e.trim()).filter(Boolean)
+    for (const cc of ccList) recipients.push({ email: cc })
   }
 
-  // Optional fast-path: trigger a prebuilt campaign if configured
-  if (SENDER_CAMPAIGN_ID) {
-    try {
-      console.log(`Trying Sender.net Campaign send for campaign ID: ${SENDER_CAMPAIGN_ID}`)
-      const sent = await attemptSendCampaign(SENDER_CAMPAIGN_ID)
-      if (sent.success) {
-        return sent
+  const payload = {
+    personalizations: [
+      {
+        to: recipients,
+        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`
       }
-    } catch (e) {
-      console.log('Campaign send attempt failed, falling back to API send flow:', e.message)
-    }
+    ],
+    from: { email: EMAIL_CONFIG.from, name: 'Agent Application System' },
+    reply_to: { email: EMAIL_CONFIG.replyTo || user?.email || EMAIL_CONFIG.from },
+    content: [
+      { type: 'text/plain', value: text },
+      { type: 'text/html', value: html }
+    ]
   }
 
-  for (const endpoint of possibleEndpoints) {
-    try {
-      console.log(`Trying Sender.net endpoint: ${endpoint}`)
-      const result = await attemptSendEmail(endpoint, applicationData, pdfBuffer, user)
-      if (result.success) {
-        console.log(`Success with endpoint: ${endpoint}`)
-        return result
+  if (pdfBuffer) {
+    payload.attachments = [
+      {
+        content: pdfBuffer.toString('base64'),
+        filename: `Application-${applicationData.applicationId}.pdf`,
+        type: 'application/pdf',
+        disposition: 'attachment'
       }
-    } catch (error) {
-      console.log(`Failed with endpoint ${endpoint}:`, error.message)
-      lastError = error
-      if (!error.message.includes('404')) {
-        // If it's not a 404, this might be the right endpoint with a different issue
-        throw error
-      }
-    }
+    ]
   }
-  
-  // If all endpoints failed, provide fallback logging but don't fail the submission
-  console.error('All Sender.net endpoints failed. Logging email for manual processing...')
-  console.log('=== EMAIL THAT FAILED TO SEND ===')
-  console.log('TO:', EMAIL_CONFIG.to, EMAIL_CONFIG.cc ? `, CC: ${EMAIL_CONFIG.cc}` : '')
-  console.log('FROM:', EMAIL_CONFIG.from)
-  console.log('SUBJECT:', `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`)
-  console.log('APPLICATION ID:', applicationData.applicationId)
-  console.log('BUSINESS NAME:', applicationData.businessInfo.legalName)
-  console.log('AGENT:', user.email)
-  console.log('SUBMITTED:', new Date().toISOString())
-  console.log('=== END EMAIL LOG ===')
-  
-  // Return a fallback success to prevent submission failure
-  console.log('⚠️ EMAIL FALLBACK: Application will be saved but email notification failed')
-  return {
-    success: true,
-    messageId: 'fallback-' + Date.now(),
-    service: 'fallback-logging',
-    warning: 'Email service unavailable - check logs for email content'
+
+  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${SENDGRID_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+
+  if (res.status === 202) {
+    return { success: true, messageId: `sendgrid-${Date.now()}`, service: 'sendgrid' }
   }
+
+  const errText = await res.text()
+  throw new Error(`SendGrid error ${res.status}: ${errText}`)
 }
 
 // Trigger a preconfigured campaign by ID via Sender.net Campaigns API
@@ -249,38 +229,10 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       throw new Error(`Invalid REPLY_TO email format: ${emailPayload.reply_to}`)
     }
 
-    // TEMPORARY: Let's also try the exact format that worked in Postman
-    const postmanPayload = {
-      "from": "james@thepaymentsexpert.com",
-      "to": "your-test-email@gmail.com", // Replace with your test email
-      "subject": "API Test from Code",
-      "html": "<h1>Test from code</h1>",
-      "editor": "html"
-    }
+   
     
-    console.log('=== TESTING WITH POSTMAN PAYLOAD ===')
-    console.log('Postman payload:', JSON.stringify(postmanPayload, null, 2))
-    
-    // Try the exact Postman payload first
-    const postmanResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(postmanPayload)
-    })
-    
-    console.log('Postman test response status:', postmanResponse.status)
-    const postmanText = await postmanResponse.text()
-    console.log('Postman test response body:', postmanText)
-    
-    if (postmanResponse.ok) {
-      console.log('🎉 POSTMAN PAYLOAD WORKED! The issue is in your email content/format')
-      // Don't return yet, let's see what happens with the real payload
-    } else {
-      console.log('❌ Even Postman payload failed - this is a token/permissions issue')
-    }
-    console.log('=== END POSTMAN TEST ===')
-    
-    console.log('Now trying with real application data...')
+   
+  
     
     const response = await fetch(apiUrl, {
       method: 'POST',
