@@ -71,13 +71,10 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     // Try different payload formats for different endpoints
     let emailPayload
     if (apiUrl.includes('transactional')) {
-      // Transactional email format
+      // Transactional email format - from must be a string
       emailPayload = {
-        to: recipientsObjects,
-        from: {
-          email: EMAIL_CONFIG.from,
-          name: 'Agent Application System'
-        },
+        to: recipientsArray, // Try simple array format first
+        from: EMAIL_CONFIG.from, // Simple string format
         reply_to: EMAIL_CONFIG.replyTo || user.email,
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
         html: emailContent.html,
@@ -87,10 +84,7 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       // Standard email format
       emailPayload = {
         to: recipientsArray,
-        from: {
-          email: EMAIL_CONFIG.from,
-          name: 'Agent Application System'
-        },
+        from: EMAIL_CONFIG.from, // Also use string format for consistency
         reply_to: EMAIL_CONFIG.replyTo || user.email,
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
         html: emailContent.html,

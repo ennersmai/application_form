@@ -37,7 +37,7 @@
           type="text"
           required
           maxlength="8"
-          pattern="[0-9-]{6,8}"
+          pattern="[0-9\-]{6,8}"
           class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
           :class="{ 'border-red-300': sortCodeError && showValidation }"
           placeholder="12-34-56 or 123456"
