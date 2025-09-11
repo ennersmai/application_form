@@ -144,6 +144,26 @@ export const useFormStore = defineStore('form', {
       }
     },
 
+    // Clear all principals and reset to initial state
+    clearPrincipals() {
+      this.principals = [{
+        id: 1,
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        position: 'director',
+        ownershipPercentage: 100,
+        homeAddress: {
+          line1: '',
+          line2: '',
+          city: '',
+          county: '',
+          postcode: ''
+        }
+      }]
+    },
+
     // Update business info based on type
     updateBusinessType(type) {
       this.businessInfo.businessType = type

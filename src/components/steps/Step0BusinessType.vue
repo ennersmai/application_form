@@ -280,6 +280,15 @@ const lookupCompanyDetails = async () => {
       formStore.setCompanyDetails(result.data)
       formStore.businessTypeCheck.companyNumber = selectedCompany.value.company_number
       
+      // Auto-populate principal information from company officers/directors
+      if (result.data.officers && result.data.officers.length > 0) {
+        autoPopulatePrincipals(result.data)
+        // Show success message
+        setTimeout(() => {
+          alert(`✅ Auto-populated ${result.data.officers.length} principal(s) from company records. Please review and complete the missing information (email, phone, address) in the Principal Information step.`)
+        }, 500)
+      }
+      
       // Auto-check directors verified if no directors (shouldn't happen for active companies)
       if (!result.data.officers || result.data.officers.length === 0) {
         directorsVerified.value = true
@@ -300,6 +309,78 @@ const lookupCompanyDetails = async () => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('en-GB')
+}
+
+const autoPopulatePrincipals = (companyData) => {
+  if (!companyData.officers || companyData.officers.length === 0) return
+  
+  // Clear existing principals first
+  formStore.clearPrincipals()
+  
+  // Add principals from company officers/directors
+  companyData.officers.forEach((officer, index) => {
+    if (index === 0) {
+      // Update the first principal that already exists
+      const principal = formStore.principals[0]
+      updatePrincipalFromOfficer(principal, officer, index === 0)
+    } else {
+      // Add new principals for additional officers
+      formStore.addPrincipal()
+      const principal = formStore.principals[formStore.principals.length - 1]
+      updatePrincipalFromOfficer(principal, officer, false)
+    }
+  })
+  
+  // Distribute ownership equally among all principals
+  const numberOfPrincipals = formStore.principals.length
+  const equalShare = Math.floor(100 / numberOfPrincipals)
+  const remainder = 100 - (equalShare * numberOfPrincipals)
+  
+  formStore.principals.forEach((principal, index) => {
+    principal.ownershipPercentage = equalShare + (index < remainder ? 1 : 0)
+  })
+}
+
+const updatePrincipalFromOfficer = (principal, officer, isFirst) => {
+  // Parse name (Companies House format is "SURNAME, Forename")
+  const nameParts = officer.name.split(', ')
+  if (nameParts.length >= 2) {
+    principal.lastName = nameParts[0].trim()
+    principal.firstName = nameParts[1].trim()
+  } else {
+    // Fallback if name format is different
+    const nameWords = officer.name.split(' ')
+    if (nameWords.length >= 2) {
+      principal.firstName = nameWords[0].trim()
+      principal.lastName = nameWords.slice(1).join(' ').trim()
+    } else {
+      principal.firstName = officer.name.trim()
+      principal.lastName = ''
+    }
+  }
+  
+  // Set position based on officer role
+  if (officer.officer_role === 'director') {
+    principal.position = 'director'
+  } else if (officer.officer_role === 'secretary') {
+    principal.position = 'director' // Default to director for secretaries
+  } else {
+    principal.position = 'director' // Default to director
+  }
+  
+  // Set ownership percentage (will be updated after all principals are added)
+  principal.ownershipPercentage = 0
+  
+  // Initialize empty home address (user will need to fill this)
+  if (!principal.homeAddress) {
+    principal.homeAddress = {
+      line1: '',
+      line2: '',
+      city: '',
+      county: '',
+      postcode: ''
+    }
+  }
 }
 
 // Watchers
