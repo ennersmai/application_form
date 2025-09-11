@@ -140,33 +140,43 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     // Prepare email content
     const emailContent = generateEmailContent(applicationData)
     
-    // Prepare recipients for transactional email (try both formats)
-    const recipientsArray = [EMAIL_CONFIG.to]
-    if (EMAIL_CONFIG.cc) {
-      recipientsArray.push(EMAIL_CONFIG.cc)
-    }
-    
-    // Also prepare object format for APIs that need it
-    const recipientsObjects = recipientsArray.map(email => ({ email }))
-
-    // Try different payload formats for different endpoints
+    // Fix: Use the correct format that matches your working Postman request
     let emailPayload
     if (apiUrl.includes('transactional')) {
-      // Transactional email format - from must be a string
+      // THIS IS THE CORRECT FORMAT - matches what worked in Postman
       emailPayload = {
-        to: recipientsArray, // Try simple array format first
-        from: EMAIL_CONFIG.from, // Simple string format
-        reply_to: EMAIL_CONFIG.replyTo || user.email,
+        from: {
+          email: EMAIL_CONFIG.from,
+          name: "Merchant Applications"
+        },
+        to: [
+          {
+            email: EMAIL_CONFIG.to,
+            name: "Applications Team"
+          }
+        ],
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
         html: emailContent.html,
-        text: emailContent.text,
-        editor: "html" // Required by Sender.net transactional API
+        text: emailContent.text
+      }
+
+      // Add CC if configured
+      if (EMAIL_CONFIG.cc) {
+        emailPayload.to.push({
+          email: EMAIL_CONFIG.cc,
+          name: "CC Recipient"
+        })
+      }
+
+      // Add reply-to
+      if (EMAIL_CONFIG.replyTo || user.email) {
+        emailPayload.reply_to = EMAIL_CONFIG.replyTo || user.email
       }
     } else {
-      // Standard email format
+      // Keep your existing format for other endpoints
       emailPayload = {
-        to: recipientsArray,
-        from: EMAIL_CONFIG.from, // Also use string format for consistency
+        to: [EMAIL_CONFIG.to],
+        from: EMAIL_CONFIG.from,
         reply_to: EMAIL_CONFIG.replyTo || user.email,
         subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
         html: emailContent.html,
@@ -183,13 +193,17 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
       }]
     }
 
-    // Send via Sender.net API using native fetch
-    const url = apiUrl
-    console.log('Sender.net API URL:', url)
-    console.log('Sender.net API Token exists:', !!SENDER_CONFIG.apiToken)
-    console.log('Email FROM:', EMAIL_CONFIG.from)
+    console.log('Sender.net API URL:', apiUrl)
+    console.log('Email payload structure:', {
+      from: emailPayload.from,
+      to: emailPayload.to,
+      subject: emailPayload.subject,
+      hasHtml: !!emailPayload.html,
+      hasText: !!emailPayload.text,
+      hasAttachments: !!emailPayload.attachments
+    })
     
-    const response = await fetch(url, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SENDER_CONFIG.apiToken}`,
@@ -200,42 +214,35 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     })
     
     console.log('Sender.net response status:', response.status)
-    try {
-      console.log('Sender.net response headers:', Object.fromEntries(response.headers))
-    } catch (e) {
-      // In some runtimes, headers may not be directly iterable as entries
-      console.log('Sender.net response headers (raw):', response.headers)
-    }
     
     // Always log the response body for debugging
     const responseText = await response.text()
-    let errorData
+    let responseData
     try {
-      errorData = JSON.parse(responseText)
+      responseData = JSON.parse(responseText)
     } catch (e) {
-      errorData = { message: responseText }
+      responseData = { message: responseText }
     }
-    console.log('Sender.net error response body:', errorData)
+    console.log('Sender.net response body:', responseData)
 
     if (response.ok) {
-      console.log('Email sent successfully via Sender.net:', errorData)
+      console.log('Email sent successfully via Sender.net:', responseData)
       return {
         success: true,
-        messageId: errorData.message_id || errorData.id
+        messageId: responseData.message_id || responseData.id || 'success'
       }
     } else {
-      
       // Provide specific error messages for common issues
       if (response.status === 403) {
         throw new Error(`Sender.net API permission denied (403). Possible issues:
         1. API token doesn't have transactional email permissions
         2. Sender domain '${EMAIL_CONFIG.from}' is not verified
         3. Account needs transactional email feature enabled
-        Error: ${errorData.message || response.statusText}`)
+        Error: ${responseData.message || response.statusText}`)
       } else if (response.status === 401) {
-        throw new Error(`Sender.net API authentication failed (401). Check API token validity. Error: ${errorData.message || response.statusText}`)
+        throw new Error(`Sender.net API authentication failed (401). Check API token validity. Error: ${responseData.message || response.statusText}`)
       } else {
-        throw new Error(`Sender.net API returned status ${response.status}: ${errorData.message || response.statusText}`)
+        throw new Error(`Sender.net API returned status ${response.status}: ${responseData.message || response.statusText}`)
       }
     }
 
