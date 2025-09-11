@@ -140,48 +140,24 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
     // Prepare email content
     const emailContent = generateEmailContent(applicationData)
     
-    // Fix: Use the correct format that matches your working Postman request
-    let emailPayload
-    if (apiUrl.includes('transactional')) {
-      // THIS IS THE CORRECT FORMAT - matches what worked in Postman
-      emailPayload = {
-        from: {
-          email: EMAIL_CONFIG.from,
-          name: "Merchant Applications"
-        },
-        to: [
-          {
-            email: EMAIL_CONFIG.to,
-            name: "Applications Team"
-          }
-        ],
-        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
-        html: emailContent.html,
-        text: emailContent.text
-      }
+    // Fix: Match the exact format that worked in your Postman test
+    let emailPayload = {
+      from: EMAIL_CONFIG.from, // String format as the API requires
+      to: EMAIL_CONFIG.to, // Simple string format 
+      subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
+      html: emailContent.html,
+      text: emailContent.text
+    }
 
-      // Add CC if configured
-      if (EMAIL_CONFIG.cc) {
-        emailPayload.to.push({
-          email: EMAIL_CONFIG.cc,
-          name: "CC Recipient"
-        })
-      }
+    // Add CC if configured (you might need to test this format)
+    if (EMAIL_CONFIG.cc) {
+      // Try simple comma-separated format first
+      emailPayload.to = `${EMAIL_CONFIG.to}, ${EMAIL_CONFIG.cc}`
+    }
 
-      // Add reply-to
-      if (EMAIL_CONFIG.replyTo || user.email) {
-        emailPayload.reply_to = EMAIL_CONFIG.replyTo || user.email
-      }
-    } else {
-      // Keep your existing format for other endpoints
-      emailPayload = {
-        to: [EMAIL_CONFIG.to],
-        from: EMAIL_CONFIG.from,
-        reply_to: EMAIL_CONFIG.replyTo || user.email,
-        subject: `New Merchant Application - ${applicationData.businessInfo.legalName} (${applicationData.applicationId})`,
-        html: emailContent.html,
-        text: emailContent.text
-      }
+    // Add reply-to
+    if (EMAIL_CONFIG.replyTo || user.email) {
+      emailPayload.reply_to = EMAIL_CONFIG.replyTo || user.email
     }
 
     // Add PDF attachment if available
