@@ -328,7 +328,6 @@ async function attemptSendEmail(apiUrl, applicationData, pdfBuffer, user) {
   } catch (error) {
     console.error('Sender.net email error:', error)
     
-    // Handle specific Sender.net errors
     if (error.message.includes('Sender.net API')) {
       throw error
     }
