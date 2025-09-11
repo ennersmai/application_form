@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from 'axios'
 
 const COMPANIES_HOUSE_API_BASE = 'https://api.company-information.service.gov.uk'
 const API_KEY = process.env.COMPANIES_HOUSE_API_KEY

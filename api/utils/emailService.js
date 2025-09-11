@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from 'axios'
 
 // Sender.net API configuration
 const SENDER_CONFIG = {
