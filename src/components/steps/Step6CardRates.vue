@@ -2,7 +2,6 @@
   <div class="space-y-6">
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-2">Card Processing Rates</h2>
-      <p class="text-gray-600">Set the card processing rates and authorization fee. Defaults follow the PRD and must meet minimum thresholds.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -11,19 +10,26 @@
         <label for="consumerDebit" class="block text-sm font-medium text-gray-700 mb-2">
           Consumer Debit %
         </label>
-        <div class="flex items-center">
+        <div class="flex items-stretch border border-gray-300 rounded-lg shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500">
           <input
             id="consumerDebit"
             v-model.number="consumerDebit"
             type="number"
             step="0.01"
             min="0"
-            class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
+            class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
             :class="{ 'border-red-300': showValidation && debitError }"
             @input="updateRates"
             @blur="validateField('debit')"
           />
-          <span class="ml-2 text-gray-500">%</span>
+          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
+            <button type="button" @click="consumerDebit = +(consumerDebit || 0) + 0.05; updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <button type="button" @click="consumerDebit = Math.max(0, +(consumerDebit || 0) - 0.05); updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center rounded-br-lg">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+          </div>
         </div>
         <p class="mt-1 text-xs text-gray-500">Default 0.40%. Minimum 0.25%.</p>
         <p v-if="debitError" class="mt-1 text-sm text-red-600">{{ debitError }}</p>
@@ -34,19 +40,26 @@
         <label for="consumerCredit" class="block text-sm font-medium text-gray-700 mb-2">
           Consumer Credit %
         </label>
-        <div class="flex items-center">
+        <div class="flex items-stretch border border-gray-300 rounded-lg shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500">
           <input
             id="consumerCredit"
             v-model.number="consumerCredit"
             type="number"
             step="0.01"
             min="0"
-            class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
+            class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
             :class="{ 'border-red-300': showValidation && creditError }"
             @input="updateRates"
             @blur="validateField('credit')"
           />
-          <span class="ml-2 text-gray-500">%</span>
+          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
+            <button type="button" @click="consumerCredit = +(consumerCredit || 0) + 0.05; updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <button type="button" @click="consumerCredit = Math.max(0, +(consumerCredit || 0) - 0.05); updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center rounded-br-lg">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+          </div>
         </div>
         <p class="mt-1 text-xs text-gray-500">Default 0.65%. Minimum 0.43%.</p>
         <p v-if="creditError" class="mt-1 text-sm text-red-600">{{ creditError }}</p>
@@ -57,19 +70,26 @@
         <label for="commercialCard" class="block text-sm font-medium text-gray-700 mb-2">
           Commercial Card %
         </label>
-        <div class="flex items-center">
+        <div class="flex items-stretch border border-gray-300 rounded-lg shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500">
           <input
             id="commercialCard"
             v-model.number="commercialCard"
             type="number"
             step="0.01"
             min="0"
-            class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
+            class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
             :class="{ 'border-red-300': showValidation && commercialError }"
             @input="updateRates"
             @blur="validateField('commercial')"
           />
-          <span class="ml-2 text-gray-500">%</span>
+          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
+            <button type="button" @click="commercialCard = +(commercialCard || 0) + 0.1; updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <button type="button" @click="commercialCard = Math.max(0, +(commercialCard || 0) - 0.1); updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center rounded-br-lg">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+          </div>
         </div>
         <p class="mt-1 text-xs text-gray-500">Default 2.00%. Minimum 1.60%.</p>
         <p v-if="commercialError" class="mt-1 text-sm text-red-600">{{ commercialError }}</p>
@@ -80,7 +100,7 @@
         <label for="authorisationFee" class="block text-sm font-medium text-gray-700 mb-2">
           Authorization Fee (£)
         </label>
-        <div class="flex items-center">
+        <div class="flex items-stretch border border-gray-300 rounded-lg shadow-sm focus-within:ring-primary-500 focus-within:border-primary-500">
           <span class="mr-2 text-gray-500">£</span>
           <input
             id="authorisationFee"
@@ -88,11 +108,19 @@
             type="number"
             step="0.01"
             min="0"
-            class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
+            class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
             :class="{ 'border-red-300': showValidation && authFeeError }"
             @input="updateRates"
             @blur="validateField('auth')"
           />
+          <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
+            <button type="button" @click="authorisationFee = +(authorisationFee || 0) + 0.01; updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 border-b border-gray-300 flex-1 flex items-center justify-center">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <button type="button" @click="authorisationFee = Math.max(0, +(authorisationFee || 0) - 0.01); updateRates()" class="px-2 py-2 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex-1 flex items-center justify-center rounded-br-lg">
+              <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+          </div>
         </div>
         <p class="mt-1 text-xs text-gray-500">Default £0.04. Minimum £0.01.</p>
         <p v-if="authFeeError" class="mt-1 text-sm text-red-600">{{ authFeeError }}</p>
@@ -114,6 +142,12 @@
           </ul>
         </div>
       </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="button" @click="restoreDefaults" class="inline-flex items-center px-5 py-3 border border-blue-300 text-base font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 min-h-[44px]">
+        Restore defaults
+      </button>
     </div>
   </div>
 </template>
@@ -183,9 +217,32 @@ watch(() => uiStore.currentStep, (newStep, oldStep) => {
 
 // Initialize
 uiStore.setStepValid(6, isStepValid.value)
+
+const restoreDefaults = () => {
+  consumerDebit.value = 0.40
+  consumerCredit.value = 0.65
+  commercialCard.value = 2.00
+  authorisationFee.value = 0.04
+  debitError.value = ''
+  creditError.value = ''
+  commercialError.value = ''
+  authFeeError.value = ''
+  updateRates()
+}
 </script>
 
 <style scoped>
+/* Hide default number input arrows/spinners */
+.number-input-no-arrows::-webkit-outer-spin-button,
+.number-input-no-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-input-no-arrows {
+  appearance: textfield; /* Standard */
+  -moz-appearance: textfield; /* Firefox */
+}
 </style>
 
 

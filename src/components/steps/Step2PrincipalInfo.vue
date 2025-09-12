@@ -578,6 +578,7 @@ uiStore.setStepValid(2, isStepValid.value)
 
 /* Custom spinner buttons for better mobile experience */
 .number-input-mobile {
+  appearance: textfield; /* Standard */
   -moz-appearance: textfield; /* Firefox */
 }
 

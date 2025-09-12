@@ -210,6 +210,37 @@
     </div>
 
 
+    <!-- Card Processing Rates -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-medium text-gray-900">Card Processing Rates</h3>
+        <button
+          @click="editSection(6)"
+          class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+        >
+          Edit
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <span class="text-gray-600">Consumer Debit:</span>
+          <span class="font-medium ml-2">{{ formStore.pricing.consumerDebit }}%</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Consumer Credit:</span>
+          <span class="font-medium ml-2">{{ formStore.pricing.consumerCredit }}%</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Commercial Card:</span>
+          <span class="font-medium ml-2">{{ formStore.pricing.commercialCard }}%</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Authorization Fee:</span>
+          <span class="font-medium ml-2">£{{ (Number(formStore.pricing.authorisationFee) || 0).toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Banking Details -->
     <div class="bg-white border border-gray-200 rounded-lg p-4">
       <div class="flex items-center justify-between mb-3">

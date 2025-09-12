@@ -81,6 +81,9 @@
                     {{ option.label }}
                   </option>
                 </select>
+                <button type="button" @click="restoreDeviceDefaults(device.id)" class="mt-3 inline-flex items-center px-4 py-3 border border-blue-300 text-base font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 min-h-[44px]">
+                  Restore defaults
+                </button>
               </div>
 
               <!-- Monthly Price -->
@@ -122,6 +125,13 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Global Defaults Button -->
+    <div class="flex justify-end">
+      <button type="button" @click="restoreAllDefaults" class="inline-flex items-center px-5 py-3 border border-blue-300 text-base font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 min-h-[44px]">
+        Restore defaults
+      </button>
     </div>
 
     <!-- Total Summary -->
@@ -328,6 +338,18 @@ const decrementQuantity = (deviceId) => {
     devicePricing[deviceId].quantity--
     updateDevicePricing(deviceId)
   }
+}
+
+const restoreDeviceDefaults = (deviceId) => {
+  const config = deviceConfigurations[deviceId]
+  if (!config) return
+  devicePricing[deviceId].monthlyPrice = config.defaultPrice || 0
+  devicePricing[deviceId].contractType = config.options?.[0]?.value || 'standard'
+  updateDevicePricing(deviceId)
+}
+
+const restoreAllDefaults = () => {
+  availableDevices.value.forEach(d => restoreDeviceDefaults(d.id))
 }
 
 const handleImageError = (event, deviceId) => {
