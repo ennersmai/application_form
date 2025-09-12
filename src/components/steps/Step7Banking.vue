@@ -253,7 +253,7 @@ const updateAccountName = () => {
 watch(legalName, updateAccountName)
 
 watch(isStepValid, (newValue) => {
-  uiStore.setStepValid(6, newValue)
+  uiStore.setStepValid(7, newValue)
 })
 
 // Show validation errors after user tries to proceed
