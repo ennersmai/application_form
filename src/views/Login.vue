@@ -176,8 +176,6 @@ const handleSignUp = async () => {
   
   if (result.success) {
     error.value = ''
-    // Show success message
-    alert('Account created successfully! Please check your email to verify your account.')
     // Switch to login mode
     isSignUp.value = false
     credentials.value.password = ''
