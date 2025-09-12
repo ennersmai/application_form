@@ -215,7 +215,7 @@
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-medium text-gray-900">Banking Details</h3>
         <button
-          @click="editSection(6)"
+          @click="editSection(7)"
           class="text-sm text-primary-600 hover:text-primary-700 font-medium"
         >
           Edit
@@ -412,21 +412,21 @@ const formatSortCode = (sortCode) => {
 
 const updateConfirmation = () => {
   // Update validation when confirmation changes
-  uiStore.setStepValid(7, isStepValid.value)
+  uiStore.setStepValid(8, isStepValid.value)
 }
 
 // Watchers
 watch(isStepValid, (newValue) => {
-  uiStore.setStepValid(7, newValue)
+  uiStore.setStepValid(8, newValue)
 })
 
 // Show validation errors after user tries to proceed
 watch(() => uiStore.currentStep, (newStep, oldStep) => {
-  if (oldStep === 7 && newStep !== 7) {
+  if (oldStep === 8 && newStep !== 8) {
     showValidation.value = true
   }
 })
 
 // Initialize validation
-uiStore.setStepValid(7, isStepValid.value)
+uiStore.setStepValid(8, isStepValid.value)
 </script>

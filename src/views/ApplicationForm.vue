@@ -169,8 +169,9 @@ import Step2PrincipalInfo from '@/components/steps/Step2PrincipalInfo.vue'
 import Step3BusinessInfo from '@/components/steps/Step3BusinessInfo.vue'
 import Step4TradingInfo from '@/components/steps/Step4TradingInfo.vue'
 import Step5Pricing from '@/components/steps/Step5Pricing.vue'
-import Step6Banking from '@/components/steps/Step7Banking.vue'
-import Step7Review from '@/components/steps/Step8Review.vue'
+import Step6CardRates from '@/components/steps/Step6CardRates.vue'
+import Step7Banking from '@/components/steps/Step7Banking.vue'
+import Step8Review from '@/components/steps/Step8Review.vue'
 
 const router = useRouter()
 const formStore = useFormStore()
@@ -199,8 +200,9 @@ const stepComponents = {
   3: Step3BusinessInfo,
   4: Step4TradingInfo,
   5: Step5Pricing,
-  6: Step6Banking,
-  7: Step7Review
+  6: Step6CardRates,
+  7: Step7Banking,
+  8: Step8Review
 }
 
 // Computed properties

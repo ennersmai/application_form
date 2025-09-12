@@ -258,7 +258,7 @@ watch(isStepValid, (newValue) => {
 
 // Show validation errors after user tries to proceed
 watch(() => uiStore.currentStep, (newStep, oldStep) => {
-  if (oldStep === 6 && newStep !== 6) {
+  if (oldStep === 7 && newStep !== 7) {
     showValidation.value = true
     validateSortCode()
     validateAccountNumber()
@@ -270,6 +270,6 @@ onMounted(() => {
   updateAccountName()
   validateSortCode()
   validateAccountNumber()
-  uiStore.setStepValid(6, isStepValid.value)
+  uiStore.setStepValid(7, isStepValid.value)
 })
 </script>
