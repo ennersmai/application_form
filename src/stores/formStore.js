@@ -23,6 +23,7 @@ export const useFormStore = defineStore('form', {
         id: 1,
         firstName: '',
         lastName: '',
+        dob: '',
         email: '',
         phone: '',
         position: 'sole_trader', // sole_trader, director, ultimate_owner
@@ -121,6 +122,7 @@ export const useFormStore = defineStore('form', {
         id: newId,
         firstName: '',
         lastName: '',
+        dob: '',
         email: '',
         phone: '',
         position: 'director',
@@ -148,6 +150,7 @@ export const useFormStore = defineStore('form', {
         id: 1,
         firstName: '',
         lastName: '',
+        dob: '',
         email: '',
         phone: '',
         position: 'director',

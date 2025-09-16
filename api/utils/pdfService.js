@@ -72,6 +72,7 @@ async function generateApplicationPDF(applicationData) {
       applicationData.principals.forEach((principal, index) => {
         doc.fontSize(11).text(`Principal ${index + 1}:`, { underline: true })
         addKeyValue(doc, '  Name', `${principal.firstName} ${principal.lastName}`)
+        addKeyValue(doc, '  Date of Birth', principal.dob)
         addKeyValue(doc, '  Email', principal.email)
         addKeyValue(doc, '  Phone', principal.phone)
         addKeyValue(doc, '  Position', formatPosition(principal.position))

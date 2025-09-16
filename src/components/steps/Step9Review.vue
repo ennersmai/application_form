@@ -79,11 +79,17 @@
           class="border border-gray-100 rounded p-3"
         >
           <h4 class="font-medium text-gray-900 mb-2">Principal {{ index + 1 }}</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="text-gray-500">Full Name:</div>
+            <div class="font-medium text-gray-900">{{ principal.firstName }} {{ principal.lastName }}</div>
+            
+            <div class="text-gray-500">Date of Birth:</div>
+            <div class="font-medium text-gray-900">{{ principal.dob }}</div>
+
+            <div class="text-gray-500">Position:</div>
+            <div class="font-medium text-gray-900">{{ formatPosition(principal.position) }}</div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-            <div>
-              <span class="text-gray-600">Name:</span>
-              <span class="font-medium ml-2">{{ principal.firstName }} {{ principal.lastName }}</span>
-            </div>
             <div>
               <span class="text-gray-600">Email:</span>
               <span class="font-medium ml-2">{{ principal.email }}</span>

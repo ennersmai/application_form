@@ -353,6 +353,7 @@ function generateEmailContent(data) {
             <h4>Principal ${index + 1}</h4>
             <div class="grid">
               <div><span class="key">Name:</span> <span class="value">${principal.firstName} ${principal.lastName}</span></div>
+              <div><span class="key">Date of Birth:</span> <span class="value">${principal.dob}</span></div>
               <div><span class="key">Email:</span> <span class="value">${principal.email}</span></div>
               <div><span class="key">Phone:</span> <span class="value">${principal.phone}</span></div>
               <div><span class="key">Position:</span> <span class="value">${formatPosition(principal.position)}</span></div>
@@ -501,6 +502,7 @@ PRINCIPAL INFORMATION
 ${data.principals.map((principal, index) => `
 Principal ${index + 1}:
   Name: ${principal.firstName} ${principal.lastName}
+  Date of Birth: ${principal.dob}
   Email: ${principal.email}
   Phone: ${principal.phone}
   Position: ${formatPosition(principal.position)}

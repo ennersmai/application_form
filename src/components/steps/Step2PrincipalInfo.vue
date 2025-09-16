@@ -122,6 +122,24 @@
             />
           </div>
 
+          <!-- Date of Birth -->
+          <div>
+            <label :for="`dob-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
+              Date of Birth *
+            </label>
+            <input
+              :id="`dob-${principal.id}`"
+              v-model="principal.dob"
+              type="text"
+              required
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              :class="{ 'border-red-300': !isValidDob(principal.dob) && (showValidation || touchedFields[`dob-${principal.id}`]) }"
+              placeholder="DD/MM/YYYY"
+              @input="formatDob(principal, $event.target.value)"
+              @blur="touchedFields[`dob-${principal.id}`] = true"
+            />
+          </div>
+
           <!-- Email -->
           <div>
             <label :for="`email-${principal.id}`" class="block text-sm font-medium text-gray-700 mb-2">
@@ -398,6 +416,8 @@ const isStepValid = computed(() => {
   const allFieldsValid = principals.value.every(principal => {
     const hasBasicInfo = principal.firstName && 
            principal.lastName && 
+           principal.dob &&
+           isValidDob(principal.dob) &&
            principal.email && 
            isValidEmail(principal.email) &&
            principal.phone && 
@@ -423,6 +443,29 @@ const isStepValid = computed(() => {
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
+}
+
+const isValidDob = (dob) => {
+  const dobRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/
+  if (!dobRegex.test(dob)) return false
+  
+  const [day, month, year] = dob.split('/').map(Number)
+  const date = new Date(year, month - 1, day)
+  
+  // Check if date is valid and components match
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+}
+
+const formatDob = (principal, value) => {
+  let formatted = value.replace(/[^0-9]/g, '')
+  if (formatted.length > 2) {
+    formatted = `${formatted.slice(0, 2)}/${formatted.slice(2)}`
+  }
+  if (formatted.length > 5) {
+    formatted = `${formatted.slice(0, 5)}/${formatted.slice(5, 9)}`
+  }
+  principal.dob = formatted
+  updatePrincipal(principal.id, 'dob', formatted)
 }
 
 const updatePrincipal = (id, field, value) => {
