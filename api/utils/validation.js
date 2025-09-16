@@ -11,6 +11,7 @@ function validateApplicationData(data) {
     if (!data.tradingInfo) errors.push('Trading information is required')
     if (!data.pricing) errors.push('Pricing information is required')
     if (!data.banking) errors.push('Banking information is required')
+    // Note: additionalInfo and outlets are optional and don't require validation
 
     // Validate agent information
     if (data.agentInfo) {
@@ -182,6 +183,55 @@ function validateApplicationData(data) {
       if (data.banking.accountNumber && !isValidUKAccountNumber(data.banking.accountNumber)) {
         errors.push('Invalid UK account number format')
       }
+    }
+
+    // Validate outlets (optional)
+    if (data.outlets && Array.isArray(data.outlets)) {
+      data.outlets.forEach((outlet, index) => {
+        const prefix = `Outlet ${index + 1}`
+        
+        // Validate trading address (required if outlet exists)
+        if (!outlet.tradingAddress) {
+          errors.push(`${prefix}: Trading address is required`)
+        } else {
+          if (!outlet.tradingAddress.line1) errors.push(`${prefix}: Address line 1 is required`)
+          if (!outlet.tradingAddress.city) errors.push(`${prefix}: City is required`)
+          if (!outlet.tradingAddress.postcode) errors.push(`${prefix}: Postcode is required`)
+          
+          if (outlet.tradingAddress.postcode && !isValidUKPostcode(outlet.tradingAddress.postcode)) {
+            errors.push(`${prefix}: Invalid UK postcode format`)
+          }
+        }
+        
+        // Validate device pricing for outlet (if any devices are selected)
+        if (outlet.devicePricing && typeof outlet.devicePricing === 'object') {
+          const deviceEntries = Object.entries(outlet.devicePricing)
+          const hasSelectedDevices = deviceEntries.some(([_, device]) => Number(device?.quantity) > 0)
+          
+          if (hasSelectedDevices) {
+            deviceEntries.forEach(([deviceId, device]) => {
+              const devicePrefix = `${prefix} Device ${deviceId}`
+              const quantityNumber = Number(device?.quantity)
+              let monthlyPriceNumber = Number(device?.monthlyPrice)
+              
+              if (quantityNumber > 0) {
+                if (!Number.isFinite(quantityNumber) || quantityNumber <= 0) {
+                  errors.push(`${devicePrefix}: Quantity must be greater than 0`)
+                }
+                
+                // Check for valid monthly price
+                if (!Number.isFinite(monthlyPriceNumber) || monthlyPriceNumber <= 0) {
+                  errors.push(`${devicePrefix}: Monthly price must be a positive number`)
+                }
+                
+                if (!device.contractType) {
+                  errors.push(`${devicePrefix}: Contract type is required`)
+                }
+              }
+            })
+          }
+        }
+      })
     }
 
     return {

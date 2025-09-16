@@ -81,6 +81,14 @@ export const useFormStore = defineStore('form', {
       accountNumber: ''
     },
 
+    // Step 7: Additional Information (Optional)
+    additionalInfo: {
+      notes: '' // Optional free text field for additional information
+    },
+
+    // Multiple Outlets (Optional)
+    outlets: [], // Array of additional outlets with same legal info but different trading addresses and equipment
+
     // Meta
     applicationId: null,
     createdAt: null,
@@ -185,6 +193,38 @@ export const useFormStore = defineStore('form', {
       this.businessInfo.tradingAddress = { ...this.businessInfo.tradingAddress, ...address }
     },
 
+    // Add a new outlet
+    addOutlet() {
+      const newId = this.outlets.length + 1
+      this.outlets.push({
+        id: newId,
+        tradingName: '',
+        tradingAddress: {
+          line1: '',
+          line2: '',
+          city: '',
+          county: '',
+          postcode: '',
+          country: 'UK'
+        },
+        devicePricing: {},
+        totalMonthlyCost: 0
+      })
+    },
+
+    // Remove an outlet
+    removeOutlet(id) {
+      this.outlets = this.outlets.filter(outlet => outlet.id !== id)
+    },
+
+    // Update outlet trading address
+    setOutletTradingAddress(outletId, address) {
+      const outlet = this.outlets.find(o => o.id === outletId)
+      if (outlet) {
+        outlet.tradingAddress = { ...outlet.tradingAddress, ...address }
+      }
+    },
+
 
     // Initialize form with agent details
     initializeWithAgent(user) {
@@ -216,6 +256,8 @@ export const useFormStore = defineStore('form', {
         tradingInfo: this.tradingInfo,
         pricing: this.pricing,
         banking: this.banking,
+        additionalInfo: this.additionalInfo,
+        outlets: this.outlets,
         urgentFee: this.urgentFee,
         createdAt: this.createdAt,
         submittedAt: new Date().toISOString()

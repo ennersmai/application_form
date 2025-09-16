@@ -135,6 +135,51 @@ async function generateApplicationPDF(applicationData) {
       }
       doc.moveDown()
 
+      // Additional Information
+      if (applicationData.additionalInfo && applicationData.additionalInfo.notes) {
+        addSection(doc, 'ADDITIONAL INFORMATION')
+        doc.fontSize(10).fillColor('#333333')
+        const lines = applicationData.additionalInfo.notes.split('\n')
+        lines.forEach(line => {
+          doc.text(line, { align: 'left' })
+        })
+        doc.moveDown()
+      }
+
+      // Additional Outlets
+      if (applicationData.outlets && applicationData.outlets.length > 0) {
+        addSection(doc, 'ADDITIONAL OUTLETS')
+        applicationData.outlets.forEach((outlet, index) => {
+          doc.fontSize(12).fillColor('#1e40af').text(`Outlet ${outlet.id}${outlet.tradingName ? ` - ${outlet.tradingName}` : ''}`, { underline: true })
+          doc.moveDown(0.5)
+          
+          addKeyValue(doc, 'Trading Address', formatAddress(outlet.tradingAddress))
+          
+          if (outlet.devicePricing && Object.keys(outlet.devicePricing).length > 0) {
+            const selectedDevices = Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0)
+            if (selectedDevices.length > 0) {
+              doc.fontSize(11).fillColor('#1e40af').text('Equipment:', { underline: true })
+              doc.moveDown(0.3)
+              
+              selectedDevices.forEach(([deviceId, device]) => {
+                const deviceName = getDeviceName(deviceId)
+                const totalCost = Number(device.quantity) * Number(device.monthlyPrice)
+                addKeyValue(doc, `  ${deviceName}`, `${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month = £${totalCost.toFixed(2)}`)
+              })
+              
+              const outletTotal = getOutletTotal(outlet)
+              doc.fontSize(10).fillColor('#333333')
+              addKeyValue(doc, 'Outlet Total', `£${outletTotal.toFixed(2)}/month`)
+            }
+          }
+          doc.moveDown()
+        })
+        
+        const totalOutletsCost = getTotalOutletsCost(applicationData.outlets)
+        doc.fontSize(11).fillColor('#1e40af').text(`Total Additional Outlets Cost: £${totalOutletsCost.toFixed(2)}/month`, { underline: true })
+        doc.moveDown()
+      }
+
       // Banking
       addSection(doc, 'BANKING DETAILS')
       addKeyValue(doc, 'Account Name', applicationData.banking.accountName)
@@ -145,10 +190,14 @@ async function generateApplicationPDF(applicationData) {
       // Summary
       addSection(doc, 'SUMMARY')
       const equipmentTotal = applicationData.pricing.totalMonthlyCost || 0
+      const outletTotal = getTotalOutletsCost(applicationData.outlets || [])
       const urgentFee = applicationData.agentInfo.isUrgent ? 20.00 : 0
-      const totalFees = equipmentTotal + urgentFee
+      const totalFees = equipmentTotal + outletTotal + urgentFee
 
       addKeyValue(doc, 'Equipment Cost', `£${equipmentTotal.toFixed(2)}`)
+      if (outletTotal > 0) {
+        addKeyValue(doc, 'Additional Outlets Cost', `£${outletTotal.toFixed(2)}`)
+      }
       if (urgentFee > 0) {
         addKeyValue(doc, 'Urgent Processing Fee', `£${urgentFee.toFixed(2)}`)
       }
@@ -239,6 +288,28 @@ function formatAddress(address) {
     address.postcode
   ].filter(part => part && String(part).trim())
   return parts.join(', ')
+}
+
+// Helper functions for outlets
+function getDeviceName(deviceId) {
+  return formatDeviceName(deviceId) // Reuse existing function
+}
+
+function getOutletTotal(outlet) {
+  let total = 0
+  if (outlet.devicePricing) {
+    Object.entries(outlet.devicePricing).forEach(([deviceId, device]) => {
+      if (Number(device?.quantity) > 0 && Number(device?.monthlyPrice) > 0) {
+        total += Number(device.quantity) * Number(device.monthlyPrice)
+      }
+    })
+  }
+  return total
+}
+
+function getTotalOutletsCost(outlets) {
+  if (!Array.isArray(outlets)) return 0
+  return outlets.reduce((total, outlet) => total + getOutletTotal(outlet), 0)
 }
 
 // CommonJS exports

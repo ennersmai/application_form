@@ -302,8 +302,9 @@ function generateEmailContent(data) {
   
   // Calculate totals
   const equipmentTotal = data.pricing.totalMonthlyCost || 0
+  const outletTotal = getTotalOutletsCost(data.outlets || [])
   const urgentFee = data.agentInfo.isUrgent ? 20.00 : 0
-  const totalFees = equipmentTotal + urgentFee
+  const totalFees = equipmentTotal + outletTotal + urgentFee
 
   const html = `
     <!DOCTYPE html>
@@ -408,6 +409,44 @@ function generateEmailContent(data) {
         </div>
       ` : ''}
 
+      ${data.additionalInfo && data.additionalInfo.notes ? `
+      <div class="section">
+        <h3>Additional Information</h3>
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; white-space: pre-wrap;">${data.additionalInfo.notes}</div>
+      </div>
+      ` : ''}
+
+      ${data.outlets && data.outlets.length > 0 ? `
+      <div class="section">
+        <h3>Additional Outlets</h3>
+        ${data.outlets.map((outlet, index) => `
+          <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+            <h4>Outlet ${outlet.id}${outlet.tradingName ? ` - ${outlet.tradingName}` : ''}</h4>
+            <p><strong>Trading Address:</strong><br>${formatAddress(outlet.tradingAddress)}</p>
+            ${outlet.devicePricing && Object.keys(outlet.devicePricing).length > 0 ? `
+              <div>
+                <strong>Equipment:</strong>
+                <div style="margin-top: 10px;">
+                  ${Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0).map(([deviceId, device]) => `
+                    <div class="grid" style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 5px;">
+                      <div><span class="key">${getDeviceName(deviceId)}:</span> <span class="value">${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month</span></div>
+                      <div style="text-align: right;"><span class="key">£${(Number(device.quantity) * Number(device.monthlyPrice)).toFixed(2)}</span></div>
+                    </div>
+                  `).join('')}
+                  <div style="border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px; font-weight: bold;">
+                    Outlet Total: £${getOutletTotal(outlet).toFixed(2)}/month
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+        <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
+          <strong>Total Additional Outlets Cost: £${getTotalOutletsCost(data.outlets).toFixed(2)}/month</strong>
+        </div>
+      </div>
+      ` : ''}
+
       <div class="section">
         <h3>Banking Details</h3>
         <div class="grid">
@@ -421,6 +460,7 @@ function generateEmailContent(data) {
         <h3>Application Summary</h3>
         <div class="grid">
           <div><span class="key">Equipment Total:</span> <span class="value">£${equipmentTotal.toFixed(2)}</span></div>
+          ${outletTotal > 0 ? `<div><span class="key">Additional Outlets Total:</span> <span class="value">£${outletTotal.toFixed(2)}</span></div>` : ''}
           ${urgentFee > 0 ? `<div><span class="key">Urgent Processing Fee:</span> <span class="value">£${urgentFee.toFixed(2)}</span></div>` : ''}
           <div style="border-top: 2px solid #2563eb; padding-top: 10px; margin-top: 10px;">
             <span class="key" style="font-size: 16px;">Total Fees: £${totalFees.toFixed(2)}</span>
@@ -494,6 +534,27 @@ ${Object.entries(data.pricing.devicePricing)
 Equipment Monthly Total: £${(data.pricing.totalMonthlyCost || 0).toFixed(2)}
 ` : ''}
 
+${data.additionalInfo && data.additionalInfo.notes ? `
+ADDITIONAL INFORMATION
+${data.additionalInfo.notes}
+` : ''}
+
+${data.outlets && data.outlets.length > 0 ? `
+ADDITIONAL OUTLETS
+${data.outlets.map((outlet, index) => `
+Outlet ${outlet.id}${outlet.tradingName ? ` - ${outlet.tradingName}` : ''}
+  Trading Address: ${formatAddress(outlet.tradingAddress)}
+  ${outlet.devicePricing && Object.keys(outlet.devicePricing).length > 0 ? `Equipment:
+  ${Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0).map(([deviceId, device]) => {
+    const deviceName = getDeviceName(deviceId)
+    const totalCost = Number(device.quantity) * Number(device.monthlyPrice)
+    return `    ${deviceName}: ${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month = £${totalCost.toFixed(2)}`
+  }).join('\n  ')}
+  Outlet Total: £${getOutletTotal(outlet).toFixed(2)}/month` : ''}
+`).join('')}
+Total Additional Outlets Cost: £${getTotalOutletsCost(data.outlets).toFixed(2)}/month
+` : ''}
+
 BANKING DETAILS
 Account Name: ${data.banking.accountName}
 Sort Code: ${formatSortCode(data.banking.sortCode)}
@@ -501,6 +562,7 @@ Account Number: ${data.banking.accountNumber}
 
 APPLICATION SUMMARY
 Equipment Total: £${equipmentTotal.toFixed(2)}
+${outletTotal > 0 ? `Additional Outlets Total: £${outletTotal.toFixed(2)}` : ''}
 ${urgentFee > 0 ? `Urgent Processing Fee: £${urgentFee.toFixed(2)}` : ''}
 Total Fees: £${totalFees.toFixed(2)}
 
@@ -591,6 +653,35 @@ function formatContractType(contractType) {
     'purchase': 'Upfront Purchase'
   }
   return contractTypes[contractType] || contractType
+}
+
+// Helper functions for outlets
+function getDeviceName(deviceId) {
+  const deviceNames = {
+    'clover-flex': 'Clover Flex',
+    'clover-mini': 'Clover Mini',
+    'clover-station-duo': 'Clover Station Duo',
+    'clover-kitchen-printer': 'Clover Kitchen Printer',
+    'clover-cash-drawer': 'Clover Cash Drawer'
+  }
+  return deviceNames[deviceId] || deviceId
+}
+
+function getOutletTotal(outlet) {
+  let total = 0
+  if (outlet.devicePricing) {
+    Object.entries(outlet.devicePricing).forEach(([deviceId, device]) => {
+      if (Number(device?.quantity) > 0 && Number(device?.monthlyPrice) > 0) {
+        total += Number(device.quantity) * Number(device.monthlyPrice)
+      }
+    })
+  }
+  return total
+}
+
+function getTotalOutletsCost(outlets) {
+  if (!Array.isArray(outlets)) return 0
+  return outlets.reduce((total, outlet) => total + getOutletTotal(outlet), 0)
 }
 
 // CommonJS exports
