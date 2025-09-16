@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { offlineService, APPLICATION_STATUS } from '@/services/offlineService'
 import { syncService } from '@/services/syncService'
 import { useAuthStore } from './authStore'
+import { useFormStore } from './formStore'
 
 export const useOfflineStore = defineStore('offline', {
   state: () => ({
@@ -169,6 +170,26 @@ export const useOfflineStore = defineStore('offline', {
         return success
       } catch (error) {
         console.error('Error retrying application:', error)
+        throw error
+      }
+    },
+
+    /**
+     * Load an application for editing
+     * @param {string} applicationId 
+     * @returns {Promise<boolean>} Success status
+     */
+    async editApplication(applicationId) {
+      try {
+        const applicationData = await syncService.editApplication(applicationId)
+        if (applicationData) {
+          const formStore = useFormStore()
+          formStore.loadDraft(applicationData)
+          return true
+        }
+        return false
+      } catch (error) {
+        console.error('Error loading application for editing:', error)
         throw error
       }
     },

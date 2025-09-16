@@ -116,10 +116,14 @@ export const syncService = {
         errorMessage = error.message
       }
       
+      const responseData = await error.response?.json().catch(() => null)
+      const validationErrors = responseData?.details || []
+
       await offlineService.updateApplicationStatus(
         application.applicationId,
         APPLICATION_STATUS.FAILED,
-        errorMessage
+        errorMessage,
+        validationErrors
       )
       
       throw error
@@ -158,6 +162,24 @@ export const syncService = {
     } catch (error) {
       console.error(`Retry failed for ${applicationId}:`, error)
       return false
+    }
+  },
+
+  /**
+   * Load a failed or draft application back into the form for editing
+   * @param {string} applicationId
+   * @returns {Promise<Object|null>} The application data or null if not found
+   */
+  async editApplication(applicationId) {
+    try {
+      const application = await offlineService.getApplication(applicationId)
+      if (!application) {
+        throw new Error('Application not found in local storage')
+      }
+      return application.formData
+    } catch (error) {
+      console.error(`Failed to load application ${applicationId} for editing:`, error)
+      return null
     }
   },
 

@@ -89,6 +89,54 @@
             <div class="md:col-span-2">
               <h5 class="text-sm font-medium text-gray-700 mb-2">Trading Address</h5>
               
+              <!-- Address Lookup -->
+              <div class="mb-4 p-3 bg-gray-100 border border-gray-200 rounded-md">
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <div class="flex-1">
+                    <label :for="`outlet-lookup-postcode-${outlet.id}`" class="block text-xs font-medium text-gray-600 mb-1">
+                      Postcode Lookup
+                    </label>
+                    <input
+                      :id="`outlet-lookup-postcode-${outlet.id}`"
+                      v-model="outlet.tradingAddress.postcode"
+                      type="text"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="Enter postcode"
+                    />
+                  </div>
+                  <div class="flex items-end">
+                    <button
+                      type="button"
+                      @click="lookupOutletAddress(outlet.id)"
+                      :disabled="!outlet.tradingAddress.postcode || (lookupState[outlet.id] && lookupState[outlet.id].loading)"
+                      class="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                    >
+                      <span v-if="lookupState[outlet.id] && lookupState[outlet.id].loading">Searching...</span>
+                      <span v-else>Find Address</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Address Results -->
+                <div v-if="lookupState[outlet.id] && lookupState[outlet.id].addresses && lookupState[outlet.id].addresses.length > 0" class="mt-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Select Address:</label>
+                  <select
+                    @change="selectOutletAddress(outlet.id, $event.target.value)"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Select an address...</option>
+                    <option v-for="(address, index) in lookupState[outlet.id].addresses" :key="index" :value="index">
+                      {{ address.formatted_address }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Error Message -->
+                <div v-if="lookupState[outlet.id] && lookupState[outlet.id].error" class="mt-2 text-sm text-red-600">
+                  {{ lookupState[outlet.id].error }}
+                </div>
+              </div>
+
               <!-- Address Line 1 -->
               <div class="mb-2">
                 <input
@@ -248,13 +296,15 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useFormStore } from '@/stores/formStore'
 import { useUiStore } from '@/stores/uiStore'
 import { equipmentData } from '@/data/equipmentData'
+import { addressService } from '@/services/addressService'
 
 const formStore = useFormStore()
 const uiStore = useUiStore()
+const lookupState = ref({})
 
 // This step is always valid since everything is optional
 const isStepValid = computed(() => true)
@@ -272,6 +322,47 @@ const addOutlet = () => {
 
 const removeOutlet = (id) => {
   formStore.removeOutlet(id)
+}
+
+const lookupOutletAddress = async (outletId) => {
+  const outlet = formStore.outlets.find(o => o.id === outletId)
+  if (!outlet || !outlet.tradingAddress.postcode) return
+
+  // Initialize or reset state for this outlet
+  lookupState.value[outletId] = { loading: true, error: null, addresses: [] }
+
+  try {
+    const result = await addressService.getAddresses(outlet.tradingAddress.postcode)
+    if (result.success && result.data.addresses.length > 0) {
+      lookupState.value[outletId].addresses = result.data.addresses.map(addr => ({
+        ...addr,
+        formatted_address: addr.formatted
+      }))
+    } else {
+      lookupState.value[outletId].error = result.error || 'No addresses found.'
+    }
+  } catch (error) {
+    console.error('Outlet address lookup error:', error)
+    lookupState.value[outletId].error = 'Failed to fetch addresses.'
+  } finally {
+    lookupState.value[outletId].loading = false
+  }
+}
+
+const selectOutletAddress = (outletId, addressIndex) => {
+  const address = lookupState.value[outletId].addresses[addressIndex]
+  if (address) {
+    const newAddress = {
+      line1: address.line1 || '',
+      line2: address.line2 || '',
+      city: address.city || '',
+      county: address.county || '',
+      postcode: address.postcode || formStore.outlets.find(o => o.id === outletId).tradingAddress.postcode
+    }
+    formStore.setOutletTradingAddress(outletId, newAddress)
+    // Clear results
+    lookupState.value[outletId].addresses = []
+  }
 }
 
 const getOutletDevice = (outlet, equipmentId) => {

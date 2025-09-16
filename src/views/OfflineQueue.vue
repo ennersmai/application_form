@@ -139,6 +139,12 @@
                 </span>
                 <div class="flex space-x-2">
                   <button
+                    @click="editApplication(app.applicationId)"
+                    class="text-sm text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded border border-blue-600 hover:bg-blue-50"
+                  >
+                    Edit
+                  </button>
+                  <button
                     @click="retryApplication(app.applicationId)"
                     class="text-sm text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded border border-primary-600 hover:bg-primary-50"
                   >
@@ -328,6 +334,19 @@ const retryApplication = async (applicationId) => {
     }
   } catch (error) {
     alert(`Retry failed: ${error.message}`)
+  }
+}
+
+const editApplication = async (applicationId) => {
+  try {
+    const success = await offlineStore.editApplication(applicationId)
+    if (success) {
+      router.push({ name: 'NewApplication' })
+    } else {
+      alert('Failed to load application for editing.')
+    }
+  } catch (error) {
+    alert(`Error loading application: ${error.message}`)
   }
 }
 

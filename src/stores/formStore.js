@@ -262,6 +262,23 @@ export const useFormStore = defineStore('form', {
         createdAt: this.createdAt,
         submittedAt: new Date().toISOString()
       }
+    },
+
+    // Load a draft application into the store
+    loadDraft(draftData) {
+      // Use a deep merge utility if available, otherwise manual merge
+      // For simplicity, this is a shallow merge on the top-level keys
+      Object.keys(draftData).forEach(key => {
+        if (key in this.$state) {
+          // A more robust solution would use a deep merge
+          if (typeof draftData[key] === 'object' && draftData[key] !== null && !Array.isArray(draftData[key])) {
+            this[key] = { ...this[key], ...draftData[key] }
+          } else {
+            this[key] = draftData[key]
+          }
+        }
+      })
+      this.touch() // Update last modified timestamp
     }
   }
 })
