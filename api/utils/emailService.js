@@ -301,10 +301,8 @@ function generateEmailContent(data) {
   const agentEmail = data.agentInfo.email
   
   // Calculate totals
-  const equipmentTotal = data.pricing.totalMonthlyCost || 0
   const outletTotal = getTotalOutletsCost(data.outlets || [])
   const urgentFee = data.agentInfo.isUrgent ? 20.00 : 0
-  const totalFees = equipmentTotal + outletTotal + urgentFee
 
   const html = `
     <!DOCTYPE html>
@@ -395,12 +393,13 @@ function generateEmailContent(data) {
               const contractTypeLabel = formatContractType(device.contractType)
               const qty = Number(device.quantity)
               const unitPrice = Number(device.monthlyPrice)
-              return Array.from({ length: qty }).map(() => `
+              const lines = Array.from({ length: qty }).map(() => `
                 <div class="grid">
                   <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month</span></div>
                   <div style="text-align: right;"><span class="key">£${unitPrice.toFixed(2)}/month</span></div>
                 </div>
               `).join('')
+              return lines + `<div style="font-size: 12px; color: #6b7280; margin-top: 2px;">Total devices: ${qty}</div>`
             }).join('')}
         </div>
       ` : ''}
@@ -423,15 +422,18 @@ function generateEmailContent(data) {
               <div>
                 <strong>Equipment:</strong>
                 <div style="margin-top: 10px;">
-                  ${Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0).map(([deviceId, device]) => `
-                    <div class="grid" style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 5px;">
-                      <div><span class="key">${getDeviceName(deviceId)}:</span> <span class="value">${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month</span></div>
-                      <div style="text-align: right;"><span class="key">£${(Number(device.quantity) * Number(device.monthlyPrice)).toFixed(2)}</span></div>
-                    </div>
-                  `).join('')}
-                  <div style="border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px; font-weight: bold;">
-                    Outlet Total: £${getOutletTotal(outlet).toFixed(2)}/month
-                  </div>
+                  ${Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0).map(([deviceId, device]) => {
+                    const name = getDeviceName(deviceId)
+                    const qty = Number(device.quantity)
+                    const unit = Number(device.monthlyPrice)
+                    const lines = Array.from({ length: qty }).map(() => `
+                      <div class="grid" style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 5px;">
+                        <div><span class="key">${name}:</span> <span class="value">1x @ £${unit.toFixed(2)}/month</span></div>
+                        <div style="text-align: right;"><span class="key">£${unit.toFixed(2)}</span></div>
+                      </div>
+                    `).join('')
+                    return lines + `<div style=\"font-size: 12px; color: #6b7280; margin-top: 2px;\">Total devices: ${qty}</div>`
+                  }).join('')}
                 </div>
               </div>
             ` : ''}
@@ -455,12 +457,8 @@ function generateEmailContent(data) {
       <div class="total">
         <h3>Application Summary</h3>
         <div class="grid">
-          <div><span class="key">Equipment Total:</span> <span class="value">£${equipmentTotal.toFixed(2)}</span></div>
           ${outletTotal > 0 ? `<div><span class="key">Additional Outlets Total:</span> <span class="value">£${outletTotal.toFixed(2)}</span></div>` : ''}
           ${urgentFee > 0 ? `<div><span class="key">Urgent Processing Fee:</span> <span class="value">£${urgentFee.toFixed(2)}</span></div>` : ''}
-          <div style="border-top: 2px solid #2563eb; padding-top: 10px; margin-top: 10px;">
-            <span class="key" style="font-size: 16px;">Total Fees: £${totalFees.toFixed(2)}</span>
-          </div>
         </div>
       </div>
 
@@ -527,7 +525,8 @@ ${Object.entries(data.pricing.devicePricing)
     const contractTypeLabel = formatContractType(device.contractType)
     const qty = Number(device.quantity)
     const unitPrice = Number(device.monthlyPrice)
-    return Array.from({ length: qty }).map(() => `${deviceName}: ${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}/month`).join('\n')
+    const lines = Array.from({ length: qty }).map(() => `${deviceName}: ${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}/month`).join('\n')
+    return `${lines}\n${deviceName} total devices: ${qty}`
   }).join('\n')}
 ` : ''}
 
@@ -544,12 +543,12 @@ Outlet ${outlet.id}${outlet.tradingName ? ` - ${outlet.tradingName}` : ''}
   ${outlet.devicePricing && Object.keys(outlet.devicePricing).length > 0 ? `Equipment:
   ${Object.entries(outlet.devicePricing).filter(([_, device]) => Number(device?.quantity) > 0).map(([deviceId, device]) => {
     const deviceName = getDeviceName(deviceId)
-    const totalCost = Number(device.quantity) * Number(device.monthlyPrice)
-    return `    ${deviceName}: ${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month = £${totalCost.toFixed(2)}`
+    const qty = Number(device.quantity)
+    const unit = Number(device.monthlyPrice)
+    return Array.from({ length: qty }).map(() => `    ${deviceName}: 1x @ £${unit.toFixed(2)}/month = £${unit.toFixed(2)}`).join('\n')
   }).join('\n  ')}
-  Outlet Total: £${getOutletTotal(outlet).toFixed(2)}/month` : ''}
+  ` : ''}
 `).join('')}
-Total Additional Outlets Cost: £${getTotalOutletsCost(data.outlets).toFixed(2)}/month
 ` : ''}
 
 BANKING DETAILS

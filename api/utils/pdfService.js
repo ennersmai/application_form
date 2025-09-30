@@ -135,6 +135,7 @@ async function generateApplicationPDF(applicationData) {
                 `${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}/month`
               )
             }
+            addKeyValue(doc, `${deviceName} total devices`, `${qty}`)
           }
         })
       } else {
@@ -167,16 +168,16 @@ async function generateApplicationPDF(applicationData) {
             if (selectedDevices.length > 0) {
               doc.fontSize(11).fillColor('#1e40af').text('Equipment:', { underline: true })
               doc.moveDown(0.3)
-              
+
               selectedDevices.forEach(([deviceId, device]) => {
                 const deviceName = getDeviceName(deviceId)
-                const totalCost = Number(device.quantity) * Number(device.monthlyPrice)
-                addKeyValue(doc, `  ${deviceName}`, `${device.quantity}x @ £${Number(device.monthlyPrice).toFixed(2)}/month = £${totalCost.toFixed(2)}`)
+                const qty = Number(device.quantity)
+                const unitPrice = Number(device.monthlyPrice)
+                for (let i = 0; i < qty; i++) {
+                  addKeyValue(doc, `  ${deviceName}`, `1x @ £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}`)
+                }
+                addKeyValue(doc, `  ${deviceName} total devices`, `${qty}`)
               })
-              
-              const outletTotal = getOutletTotal(outlet)
-              doc.fontSize(10).fillColor('#333333')
-              addKeyValue(doc, 'Outlet Total', `£${outletTotal.toFixed(2)}/month`)
             }
           }
           doc.moveDown()
@@ -194,21 +195,16 @@ async function generateApplicationPDF(applicationData) {
       addKeyValue(doc, 'Account Number', applicationData.banking.accountNumber)
       doc.moveDown()
 
-      // Summary
+      // Summary (no aggregated equipment totals)
       addSection(doc, 'SUMMARY')
-      const equipmentTotal = applicationData.pricing.totalMonthlyCost || 0
       const outletTotal = getTotalOutletsCost(applicationData.outlets || [])
       const urgentFee = applicationData.agentInfo.isUrgent ? 20.00 : 0
-      const totalFees = equipmentTotal + outletTotal + urgentFee
-
-      addKeyValue(doc, 'Equipment Cost', `£${equipmentTotal.toFixed(2)}`)
       if (outletTotal > 0) {
         addKeyValue(doc, 'Additional Outlets Cost', `£${outletTotal.toFixed(2)}`)
       }
       if (urgentFee > 0) {
         addKeyValue(doc, 'Urgent Processing Fee', `£${urgentFee.toFixed(2)}`)
       }
-      addKeyValue(doc, 'Total Fees', `£${totalFees.toFixed(2)}`)
 
       // Footer
       doc.moveDown(2)

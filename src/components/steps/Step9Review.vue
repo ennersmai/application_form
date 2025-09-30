@@ -194,23 +194,22 @@
         </button>
       </div>
       <div v-if="selectedPricingDevices.length > 0" class="space-y-2">
-        <div
-          v-for="device in selectedPricingDevices"
-          :key="device.id"
-          class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
-        >
-          <div>
-            <span class="font-medium">{{ device.name }}</span>
-            <span class="text-gray-600 ml-2">
-              {{ formatContractType(device.contractType) }} — {{ device.quantity }}x @ £{{ (Number(device.monthlyPrice) || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}
-            </span>
-            <span v-if="device.contractType === 'promo'" class="text-xs text-green-600 ml-1">[6 months @ £1]</span>
+        <div v-for="device in selectedPricingDevices" :key="device.id">
+          <div
+            v-for="unitIndex in Number(device.quantity)"
+            :key="`${device.id}-${unitIndex}`"
+            class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
+          >
+            <div>
+              <span class="font-medium">{{ device.name }}</span>
+              <span class="text-gray-600 ml-2">
+                {{ formatContractType(device.contractType) }} — 1x @ £{{ (Number(device.monthlyPrice) || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}
+              </span>
+              <span v-if="device.contractType === 'promo'" class="text-xs text-green-600 ml-1">[6 months @ £1]</span>
+            </div>
+            <span class="font-medium">£{{ (Number(device.monthlyPrice) || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}</span>
           </div>
-          <span class="font-medium">£{{ (device.totalMonthly || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}</span>
-        </div>
-        <div class="border-t border-gray-200 pt-2 flex justify-between font-medium">
-          <span>Total Monthly Cost:</span>
-          <span>£{{ totalMonthlyCost.toFixed(2) }}/month</span>
+          <div class="text-xs text-gray-600 mt-1">Total devices: {{ device.quantity }}</div>
         </div>
       </div>
       <div v-else class="text-sm text-gray-500">No pricing configured</div>
@@ -298,28 +297,22 @@
             <div v-if="getOutletEquipment(outlet).length > 0" class="md:col-span-2">
               <span class="text-gray-600 block mb-2">Equipment:</span>
               <div class="space-y-1">
-                <div
-                  v-for="equipment in getOutletEquipment(outlet)"
-                  :key="equipment.id"
-                  class="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0"
-                >
-                  <span class="text-sm">{{ equipment.name }} ({{ equipment.quantity }}x @ £{{ (equipment.monthlyPrice || 0).toFixed(2) }}/month)</span>
-                  <span class="text-sm font-medium">£{{ (equipment.quantity * (equipment.monthlyPrice || 0)).toFixed(2) }}/month</span>
-                </div>
-                <div class="border-t border-gray-300 pt-1 flex justify-between font-medium text-sm">
-                  <span>Outlet Total:</span>
-                  <span>£{{ getOutletMonthlyCost(outlet).toFixed(2) }}/month</span>
+                <div v-for="equipment in getOutletEquipment(outlet)" :key="equipment.id">
+                  <div
+                    v-for="unitIndex in equipment.quantity"
+                    :key="`${equipment.id}-${unitIndex}`"
+                    class="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0"
+                  >
+                    <span class="text-sm">{{ equipment.name }} — 1x @ £{{ (Number(equipment.monthlyPrice) || 0).toFixed(2) }}/month</span>
+                    <span class="text-sm font-medium">£{{ (Number(equipment.monthlyPrice) || 0).toFixed(2) }}/month</span>
+                  </div>
+                  <div class="text-xs text-gray-600 mt-1">Total devices: {{ equipment.quantity }}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="border-t border-gray-200 pt-3">
-          <div class="flex justify-between font-bold text-base">
-            <span class="text-gray-800">Total Additional Outlets Cost:</span>
-            <span class="text-gray-900">£{{ getTotalOutletCost().toFixed(2) }}/month</span>
-          </div>
-        </div>
+        
       </div>
     </div>
 
@@ -350,14 +343,10 @@
       </div>
     </div>
 
-    <!-- Total Summary -->
+    <!-- Application Summary (no aggregated equipment totals) -->
     <div class="bg-primary-50 border border-primary-200 rounded-lg p-4">
       <h3 class="text-lg font-medium text-primary-900 mb-3">Application Summary</h3>
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between">
-          <span class="text-primary-700">Monthly Equipment Cost:</span>
-          <span class="font-medium text-primary-900">£{{ totalMonthlyCost.toFixed(2) }}/month</span>
-        </div>
         <div v-if="getTotalOutletCost() > 0" class="flex justify-between">
           <span class="text-primary-700">Additional Outlets Cost:</span>
           <span class="font-medium text-primary-900">£{{ getTotalOutletCost().toFixed(2) }}/month</span>
@@ -365,10 +354,6 @@
         <div v-if="formStore.agentInfo.isUrgent" class="flex justify-between">
           <span class="text-primary-700">Urgent Processing Fee:</span>
           <span class="font-medium text-primary-900">£20.00</span>
-        </div>
-        <div class="border-t border-primary-200 pt-2 flex justify-between font-bold text-base">
-          <span class="text-primary-800">Total Monthly Cost:</span>
-          <span class="text-primary-900">£{{ totalFees.toFixed(2) }}/month</span>
         </div>
       </div>
     </div>
