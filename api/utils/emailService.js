@@ -395,20 +395,13 @@ function generateEmailContent(data) {
               const contractTypeLabel = formatContractType(device.contractType)
               const qty = Number(device.quantity)
               const unitPrice = Number(device.monthlyPrice)
-              const lineTotal = qty * unitPrice
-              return `
+              return Array.from({ length: qty }).map(() => `
                 <div class="grid">
-                  <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month</span></div>
-                  <div style="text-align: right;"><span class="key">£${lineTotal.toFixed(2)}/month</span></div>
+                  <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month</span></div>
+                  <div style="text-align: right;"><span class="key">£${unitPrice.toFixed(2)}/month</span></div>
                 </div>
-              `
+              `).join('')
             }).join('')}
-          <div style="border-top: 1px solid #e5e7eb; margin-top: 10px; padding-top: 10px;">
-            <div class="grid">
-              <div><span class="key">Equipment Monthly Total:</span></div>
-              <div style="text-align: right;"><span class="key">£${(data.pricing.totalMonthlyCost || 0).toFixed(2)}</span></div>
-            </div>
-          </div>
         </div>
       ` : ''}
 
@@ -534,10 +527,8 @@ ${Object.entries(data.pricing.devicePricing)
     const contractTypeLabel = formatContractType(device.contractType)
     const qty = Number(device.quantity)
     const unitPrice = Number(device.monthlyPrice)
-    const lineTotal = qty * unitPrice
-    return `${deviceName}: ${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month = £${lineTotal.toFixed(2)}/month`
+    return Array.from({ length: qty }).map(() => `${deviceName}: ${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}/month`).join('\n')
   }).join('\n')}
-Equipment Monthly Total: £${(data.pricing.totalMonthlyCost || 0).toFixed(2)}
 ` : ''}
 
 ${data.additionalInfo && data.additionalInfo.notes ? `

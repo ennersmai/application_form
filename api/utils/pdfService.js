@@ -123,20 +123,20 @@ async function generateApplicationPDF(applicationData) {
       addSection(doc, 'EQUIPMENT')
       if (applicationData.pricing.devicePricing && Object.keys(applicationData.pricing.devicePricing).length > 0) {
         Object.entries(applicationData.pricing.devicePricing).forEach(([deviceId, device]) => {
-          if (device.quantity > 0) {
+          const qty = Number(device?.quantity) || 0
+          const unitPrice = Number(device?.monthlyPrice) || 0
+          if (qty > 0) {
             const deviceName = formatDeviceName(deviceId)
             const contractTypeLabel = formatContractType(device.contractType)
-            const qty = Number(device.quantity)
-            const unitPrice = Number(device.monthlyPrice)
-            const lineTotal = qty * unitPrice
-            addKeyValue(
-              doc,
-              deviceName,
-              `${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month = £${lineTotal.toFixed(2)}/month`
-            )
+            for (let i = 0; i < qty; i++) {
+              addKeyValue(
+                doc,
+                deviceName,
+                `${contractTypeLabel} — 1 x £${unitPrice.toFixed(2)}/month = £${unitPrice.toFixed(2)}/month`
+              )
+            }
           }
         })
-        addKeyValue(doc, 'Equipment Monthly Total', `£${applicationData.pricing.totalMonthlyCost?.toFixed(2) || '0.00'}`)
       } else {
         addKeyValue(doc, 'Equipment', 'None selected')
       }

@@ -134,31 +134,25 @@
       </button>
     </div>
 
-    <!-- Total Summary -->
+    <!-- Pricing Breakdown -->
     <div v-if="hasSelectedDevices" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <h3 class="text-sm font-medium text-blue-800 mb-3">Monthly Pricing Summary</h3>
+      <h3 class="text-sm font-medium text-blue-800 mb-3">Monthly Pricing Breakdown</h3>
       
-      <!-- Selected Devices -->
-      <div class="space-y-2 mb-3">
-        <div 
-          v-for="device in selectedDevices" 
-          :key="device.id"
-          class="flex justify-between text-sm"
-        >
-          <span class="text-blue-700">
-            {{ device.name }} ({{ devicePricing[device.id].quantity }}x @ £{{ (devicePricing[device.id].monthlyPrice || 0).toFixed(2) }})
-            <span v-if="devicePricing[device.id].contractType === 'promo'" class="text-xs">[6mo@£1]</span>
-            <span v-if="isUpfrontPurchase(device.id)" class="text-xs">[One-time]</span>
-          </span>
-          <span class="font-medium text-blue-900">£{{ getDeviceTotal(device.id).toFixed(2) }}</span>
-        </div>
-      </div>
-      
-      <!-- Total -->
-      <div class="pt-3 border-t border-blue-300">
-        <div class="flex justify-between">
-          <span class="text-base font-medium text-blue-800">Total Monthly Cost:</span>
-          <span class="text-base font-bold text-blue-900">£{{ totalMonthlyCost.toFixed(2) }}</span>
+      <!-- Per-unit lines -->
+      <div class="space-y-2">
+        <div v-for="device in selectedDevices" :key="device.id">
+          <div
+            v-for="unitIndex in devicePricing[device.id].quantity"
+            :key="`${device.id}-${unitIndex}`"
+            class="flex justify-between text-sm py-1 border-b border-blue-200 last:border-b-0"
+          >
+            <span class="text-blue-700">
+              {{ device.name }} — {{ formatContractType(devicePricing[device.id].contractType) }} — 1x @ £{{ (Number(devicePricing[device.id].monthlyPrice) || 0).toFixed(2) }}{{ isUpfrontPurchase(device.id) ? '' : '/month' }}
+              <span v-if="devicePricing[device.id].contractType === 'promo'" class="text-xs">[6mo@£1]</span>
+              <span v-if="isUpfrontPurchase(device.id)" class="text-xs">[One-time]</span>
+            </span>
+            <span class="font-medium text-blue-900">£{{ (Number(devicePricing[device.id].monthlyPrice) || 0).toFixed(2) }}{{ isUpfrontPurchase(device.id) ? '' : '/month' }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -282,6 +276,15 @@ const getDeviceTotal = (deviceId) => {
 const getDeviceOptions = (device) => {
   const config = deviceConfigurations[device.id]
   return config?.options || [{ value: 'standard', label: 'Standard Contract' }]
+}
+
+const formatContractType = (contractType) => {
+  const map = {
+    standard: '48 Month Contract',
+    promo: '48 Month - 6 months at £1pm',
+    purchase: 'Upfront Purchase'
+  }
+  return map[contractType] || contractType
 }
 
 const getDeviceDefaultPrice = (deviceId) => {
