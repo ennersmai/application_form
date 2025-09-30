@@ -126,8 +126,14 @@ async function generateApplicationPDF(applicationData) {
           if (device.quantity > 0) {
             const deviceName = formatDeviceName(deviceId)
             const contractTypeLabel = formatContractType(device.contractType)
-            const totalCost = device.quantity * device.monthlyPrice
-            addKeyValue(doc, deviceName, `${contractTypeLabel} (Qty: ${device.quantity}) - £${totalCost.toFixed(2)}/month`)
+            const qty = Number(device.quantity)
+            const unitPrice = Number(device.monthlyPrice)
+            const lineTotal = qty * unitPrice
+            addKeyValue(
+              doc,
+              deviceName,
+              `${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month = £${lineTotal.toFixed(2)}/month`
+            )
           }
         })
         addKeyValue(doc, 'Equipment Monthly Total', `£${applicationData.pricing.totalMonthlyCost?.toFixed(2) || '0.00'}`)

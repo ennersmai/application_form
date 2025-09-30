@@ -389,15 +389,17 @@ function generateEmailContent(data) {
         <div class="section">
           <h3>Equipment</h3>
           ${Object.entries(data.pricing.devicePricing)
-            .filter(([_, device]) => device.quantity > 0)
+            .filter(([_, device]) => Number(device?.quantity) > 0)
             .map(([deviceId, device]) => {
               const deviceName = formatDeviceName(deviceId)
               const contractTypeLabel = formatContractType(device.contractType)
-              const totalCost = device.quantity * device.monthlyPrice
+              const qty = Number(device.quantity)
+              const unitPrice = Number(device.monthlyPrice)
+              const lineTotal = qty * unitPrice
               return `
                 <div class="grid">
-                  <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} (${device.quantity}x)</span></div>
-                  <div style="text-align: right;"><span class="value">£${totalCost.toFixed(2)}/month</span></div>
+                  <div><span class="key">${deviceName}:</span> <span class="value">${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month</span></div>
+                  <div style="text-align: right;"><span class="key">£${lineTotal.toFixed(2)}/month</span></div>
                 </div>
               `
             }).join('')}
@@ -526,12 +528,14 @@ Authorization Fee: £${data.pricing.authorisationFee}
 ${data.pricing.devicePricing && Object.keys(data.pricing.devicePricing).length > 0 ? `
 EQUIPMENT
 ${Object.entries(data.pricing.devicePricing)
-  .filter(([_, device]) => device.quantity > 0)
+  .filter(([_, device]) => Number(device?.quantity) > 0)
   .map(([deviceId, device]) => {
     const deviceName = formatDeviceName(deviceId)
     const contractTypeLabel = formatContractType(device.contractType)
-    const totalCost = device.quantity * device.monthlyPrice
-    return `${deviceName}: ${contractTypeLabel} (${device.quantity}x) - £${totalCost.toFixed(2)}/month`
+    const qty = Number(device.quantity)
+    const unitPrice = Number(device.monthlyPrice)
+    const lineTotal = qty * unitPrice
+    return `${deviceName}: ${contractTypeLabel} — ${qty} x £${unitPrice.toFixed(2)}/month = £${lineTotal.toFixed(2)}/month`
   }).join('\n')}
 Equipment Monthly Total: £${(data.pricing.totalMonthlyCost || 0).toFixed(2)}
 ` : ''}

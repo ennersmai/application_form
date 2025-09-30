@@ -195,11 +195,12 @@
         >
           <div>
             <span class="font-medium">{{ device.name }}</span>
-            <span v-if="device.contractType === 'purchase'" class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ (device.monthlyPrice || 0).toFixed(2) }} one-time)</span>
-            <span v-else class="text-gray-600 ml-2">({{ device.quantity }}x @ £{{ (device.monthlyPrice || 0).toFixed(2) }}/month)</span>
+            <span class="text-gray-600 ml-2">
+              {{ formatContractType(device.contractType) }} — {{ device.quantity }}x @ £{{ (Number(device.monthlyPrice) || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}
+            </span>
             <span v-if="device.contractType === 'promo'" class="text-xs text-green-600 ml-1">[6 months @ £1]</span>
           </div>
-          <span class="font-medium">£{{ (device.totalMonthly || 0).toFixed(2) }}/month</span>
+          <span class="font-medium">£{{ (device.totalMonthly || 0).toFixed(2) }}{{ device.contractType === 'purchase' ? '' : '/month' }}</span>
         </div>
         <div class="border-t border-gray-200 pt-2 flex justify-between font-medium">
           <span>Total Monthly Cost:</span>
@@ -430,6 +431,15 @@ const formatAddress = (address) => {
   ].filter(part => part && part.trim())
   
   return parts.join(', ')
+}
+
+const formatContractType = (contractType) => {
+  const map = {
+    standard: '48 Month Contract',
+    promo: '48 Month - 6 months at £1pm',
+    purchase: 'Upfront Purchase'
+  }
+  return map[contractType] || contractType
 }
 
 const formatSortCode = (sortCode) => {
