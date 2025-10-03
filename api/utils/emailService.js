@@ -339,6 +339,7 @@ function generateEmailContent(data) {
           <div><span class="key">Legal Name:</span> <span class="value">${data.businessInfo.legalName}</span></div>
           <div><span class="key">Business Type:</span> <span class="value">${formatBusinessType(data.businessTypeCheck.type)}</span></div>
           ${data.businessInfo.tradingName ? `<div><span class="key">Trading Name:</span> <span class="value">${data.businessInfo.tradingName}</span></div>` : ''}
+          ${data.businessInfo.companyNumber ? `<div><span class="key">Company Number:</span> <span class="value">${data.businessInfo.companyNumber}</span></div>` : ''}
           <div><span class="key">VAT Registered:</span> <span class="value">${data.businessInfo.vatRegistered ? 'Yes' : 'No'}</span></div>
         </div>
         <p><strong>Trading Address:</strong><br>${formatAddress(data.businessInfo.tradingAddress)}</p>
@@ -488,6 +489,7 @@ BUSINESS INFORMATION
 Legal Name: ${data.businessInfo.legalName}
 Business Type: ${formatBusinessType(data.businessTypeCheck.type)}
 ${data.businessInfo.tradingName ? `Trading Name: ${data.businessInfo.tradingName}` : ''}
+${data.businessInfo.companyNumber ? `Company Number: ${data.businessInfo.companyNumber}` : ''}
 Trading Address: ${formatAddress(data.businessInfo.tradingAddress)}
 VAT Registered: ${data.businessInfo.vatRegistered ? 'Yes' : 'No'}
 
