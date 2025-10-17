@@ -12,20 +12,6 @@
           Type of Business (MCC Code) *
         </label>
         
-        <!-- Industry Group Filter -->
-        <div class="mb-3">
-          <select
-            v-model="selectedIndustryGroup"
-            class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
-            @change="filterMccCodes"
-          >
-            <option value="">All Industries</option>
-            <option v-for="group in industryGroups" :key="group" :value="group">
-              {{ group }}
-            </option>
-          </select>
-          <p class="mt-1 text-sm text-gray-500">Filter by industry group to narrow down options</p>
-        </div>
 
         <!-- MCC Code Search -->
         <div class="flex items-center space-x-2">
@@ -37,7 +23,7 @@
               required
               class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
               :class="{ 'border-red-300': !selectedMccCode && showValidation }"
-              placeholder="Search for business type..."
+              placeholder="Search for business type (e.g., barber, restaurant, retail)..."
               @input="searchMccCodes"
               @focus="showMccDropdown = true"
             />
@@ -70,7 +56,7 @@
         </div>
 
         <p v-if="!selectedMccCode" class="mt-1 text-sm text-gray-500">
-          Search and select the business type that best describes your activities
+          Search and select the business type that best describes your activities. All business types are searchable.
         </p>
       </div>
 
@@ -187,8 +173,8 @@
               step="1"
               required
               class="flex-1 min-w-0 px-3 py-3 border-0 focus:outline-none focus:ring-0 text-base min-h-[44px] number-input-no-arrows"
-              placeholder="0.00"
-              @input="updateAverageTransaction"
+              placeholder="0"
+              @input="handleTransactionInput"
             />
             <div class="flex flex-col border-l border-gray-300 flex-shrink-0">
               <button
@@ -212,7 +198,7 @@
               </button>
             </div>
           </div>
-          <p class="mt-1 text-sm text-gray-500">Typical transaction amount</p>
+          <p class="mt-1 text-sm text-gray-500">Typical transaction amount (whole numbers only)</p>
         </div>
       </div>
 
@@ -243,7 +229,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useFormStore } from '@/stores/formStore'
 import { useUiStore } from '@/stores/uiStore'
-import { mccCodes, industryGroups as allIndustryGroups } from '@/data/mccCodes'
+import { mccCodes } from '@/data/mccCodes'
 
 const formStore = useFormStore()
 const uiStore = useUiStore()
@@ -270,7 +256,6 @@ const sampleMccCodes = [
 // Local reactive data
 const selectedMccCode = ref(null)
 const mccSearchTerm = ref('')
-const selectedIndustryGroup = ref('')
 const showMccDropdown = ref(false)
 const amexRequired = ref(formStore.tradingInfo.amexRequired)
 const projectedAnnualTurnover = ref(formStore.tradingInfo.projectedAnnualTurnover)
@@ -278,17 +263,11 @@ const estimatedAverageTransaction = ref(formStore.tradingInfo.estimatedAverageTr
 const showValidation = ref(false)
 
 // Computed properties
-const industryGroups = computed(() => allIndustryGroups)
 
 const filteredMccCodes = computed(() => {
   let codes = mccCodes
 
-  // Filter by industry group
-  if (selectedIndustryGroup.value) {
-    codes = codes.filter(mcc => mcc.group === selectedIndustryGroup.value)
-  }
-
-  // Filter by search term
+  // Filter by search term only
   if (mccSearchTerm.value) {
     const searchLower = mccSearchTerm.value.toLowerCase()
     codes = codes.filter(mcc => 
@@ -329,12 +308,6 @@ const clearMccSelection = () => {
   formStore.touch()
 }
 
-const filterMccCodes = () => {
-  // Reset search when industry group changes
-  if (mccSearchTerm.value && !selectedMccCode.value) {
-    mccSearchTerm.value = ''
-  }
-}
 
 const updateAmexRequired = () => {
   formStore.tradingInfo.amexRequired = amexRequired.value
@@ -349,6 +322,15 @@ const updateProjectedTurnover = () => {
 const updateAverageTransaction = () => {
   formStore.tradingInfo.estimatedAverageTransaction = estimatedAverageTransaction.value || 0
   formStore.touch()
+}
+
+const handleTransactionInput = (event) => {
+  // Remove any decimal points and non-numeric characters except digits
+  let value = event.target.value.replace(/[^\d]/g, '')
+  
+  // Convert to number and update
+  estimatedAverageTransaction.value = value ? parseInt(value, 10) : 0
+  updateAverageTransaction()
 }
 
 const incrementTurnover = () => {
