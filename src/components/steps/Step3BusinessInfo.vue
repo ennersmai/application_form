@@ -49,17 +49,19 @@
     <!-- Trading Name -->
     <div>
       <label for="tradingName" class="block text-sm font-medium text-gray-700 mb-2">
-        Trading Name
+        Trading Name *
       </label>
       <input
         id="tradingName"
         v-model="tradingName"
         type="text"
+        required
         class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
-        placeholder="Enter trading name (if different from legal name)"
+        :class="{ 'border-red-300': !tradingName && showValidation }"
+        placeholder="Enter trading name"
         @input="updateTradingName"
       />
-      <p class="mt-1 text-sm text-gray-500">Only fill this if the business trades under a different name</p>
+      <p class="mt-1 text-sm text-gray-500">Enter the trading name used by the business</p>
     </div>
 
     <!-- Company Number (for LTD companies) -->
@@ -319,11 +321,12 @@ const isValidPostcode = computed(() => {
 
 const isStepValid = computed(() => {
   const hasLegalName = legalName.value && legalName.value.trim().length > 0
+  const hasTradingName = tradingName.value && tradingName.value.trim().length > 0
   const hasAddress = tradingAddress.value.line1 && 
                     tradingAddress.value.city && 
                     tradingAddress.value.postcode
   
-  return hasLegalName && hasAddress
+  return hasLegalName && hasTradingName && hasAddress
 })
 
 // Methods

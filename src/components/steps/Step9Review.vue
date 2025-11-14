@@ -134,7 +134,7 @@
           <span class="text-gray-600">Legal Name:</span>
           <span class="font-medium ml-2">{{ formStore.businessInfo.legalName }}</span>
         </div>
-        <div v-if="formStore.businessInfo.tradingName">
+        <div>
           <span class="text-gray-600">Trading Name:</span>
           <span class="font-medium ml-2">{{ formStore.businessInfo.tradingName }}</span>
         </div>
