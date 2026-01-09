@@ -6,13 +6,15 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { supabase } from '@/services/supabase'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const appError = ref('')
+let authSubscription = null
 
 onMounted(async () => {
   try {
@@ -25,8 +27,26 @@ onMounted(async () => {
       return
     }
 
+    // Check for password reset token in URL hash first
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const type = hashParams.get('type')
+    
+    if (type === 'recovery') {
+      // Password reset link detected, route to reset password page
+      router.push('/reset-password')
+      return
+    }
+
     // Check for existing session on app load
     await authStore.checkSession()
+    
+    // Listen for auth state changes (e.g., when Supabase processes hash tokens)
+    authSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Password recovery token detected, route to reset password
+        router.push('/reset-password')
+      }
+    })
     
     // Handle initial routing
     const currentPath = router.currentRoute.value.path
@@ -38,6 +58,18 @@ onMounted(async () => {
       // Authenticated but on login page, redirect to home
       router.push('/')
     }
+    
+  } catch (error) {
+    appError.value = error.message || 'Failed to initialize application'
+  }
+})
+
+onUnmounted(() => {
+  // Cleanup subscription
+  if (authSubscription?.data?.subscription) {
+    authSubscription.data.subscription.unsubscribe()
+  }
+})
     
   } catch (error) {
     appError.value = error.message || 'Failed to initialize application'

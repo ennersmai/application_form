@@ -4,12 +4,19 @@ import Login from '@/views/Login.vue'
 import Home from '@/views/Home.vue'
 import ApplicationForm from '@/views/ApplicationForm.vue'
 import OfflineQueue from '@/views/OfflineQueue.vue'
+import ResetPassword from '@/views/ResetPassword.vue'
 
 const routes = [
   {
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPassword,
     meta: { requiresAuth: false }
   },
   {

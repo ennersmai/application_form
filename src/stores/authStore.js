@@ -92,6 +92,46 @@ export const useAuthStore = defineStore('auth', {
         console.error('Logout error:', error)
         this.error = error.message
       }
+    },
+
+    async resetPassword(email) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        })
+        
+        if (error) throw error
+        
+        return { success: true }
+      } catch (error) {
+        this.error = error.message
+        return { success: false, error: error.message }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updatePassword(newPassword) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword
+        })
+        
+        if (error) throw error
+        
+        return { success: true }
+      } catch (error) {
+        this.error = error.message
+        return { success: false, error: error.message }
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

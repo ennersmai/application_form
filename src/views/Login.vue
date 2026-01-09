@@ -102,15 +102,25 @@
           </button>
         </div>
 
-        <!-- Toggle Sign Up/Sign In -->
-        <div class="text-center">
-          <button
-            type="button"
-            @click="toggleMode"
-            class="text-sm text-primary-600 hover:text-primary-500 font-medium"
-          >
-            {{ isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up" }}
-          </button>
+        <!-- Toggle Sign Up/Sign In and Forgot Password -->
+        <div class="text-center space-y-2">
+          <div>
+            <button
+              type="button"
+              @click="toggleMode"
+              class="text-sm text-primary-600 hover:text-primary-500 font-medium"
+            >
+              {{ isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up" }}
+            </button>
+          </div>
+          <div v-if="!isSignUp">
+            <router-link
+              to="/reset-password"
+              class="text-sm text-primary-600 hover:text-primary-500 font-medium"
+            >
+              Forgot your password?
+            </router-link>
+          </div>
         </div>
       </form>
 
