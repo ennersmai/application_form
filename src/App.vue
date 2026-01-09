@@ -27,14 +27,24 @@ onMounted(async () => {
       return
     }
 
-    // Check for password reset token in URL hash first
+    // Check for password reset token in URL hash or query params
+    // Supabase verify endpoint redirects with hash params like: #access_token=...&type=recovery
     const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const type = hashParams.get('type')
+    const queryParams = new URLSearchParams(window.location.search)
+    const type = hashParams.get('type') || queryParams.get('type')
     
     if (type === 'recovery') {
-      // Password reset link detected, route to reset password page
-      router.push('/reset-password')
-      return
+      // Password reset link detected, ensure we're on reset password page
+      // Use window.location to preserve hash if router hasn't handled it yet
+      if (router.currentRoute.value.name !== 'ResetPassword') {
+        if (window.location.hash) {
+          window.location.href = '/reset-password' + window.location.hash
+          return
+        } else {
+          router.push('/reset-password')
+          return
+        }
+      }
     }
 
     // Check for existing session on app load
@@ -68,11 +78,6 @@ onUnmounted(() => {
   // Cleanup subscription
   if (authSubscription?.data?.subscription) {
     authSubscription.data.subscription.unsubscribe()
-  }
-})
-    
-  } catch (error) {
-    appError.value = error.message || 'Failed to initialize application'
   }
 })
 </script>
