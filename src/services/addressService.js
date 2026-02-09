@@ -1,3 +1,6 @@
+const GETADDRESS_API_BASE = 'https://api.getaddress.io'
+const DOMAIN_TOKEN = 'dtoken_hEDzcyiWMr04G83aOMG06tg7U8V1surOzSScLE8TG22r2EYfOhrRnI1eyhADhPZydlrST5mHKhaz65Ek-zuggxend96czT6RvJ2vyKl4u1B38sYTHPHh3SdQhBbFuQoImNi61tN6m5XR56rkuMJkNKSVHGGAEy0UWwnjS3ZhPpNPE0ukSDsnx1UhFrJRGAULiqcsJWLQf-RfEuYthehMN0745oaySDWP'
+
 export const addressService = {
   /**
    * Look up addresses by search query
@@ -13,16 +16,9 @@ export const addressService = {
         }
       }
 
-      const response = await fetch('/api/address-lookup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: query.trim(),
-          top: 10
-        })
-      })
+      // Step 1: Autocomplete to get suggestions
+      const autocompleteUrl = `${GETADDRESS_API_BASE}/autocomplete/${encodeURIComponent(query.trim())}?api-key=${DOMAIN_TOKEN}&all=true&top=10`
+      const response = await fetch(autocompleteUrl)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -30,40 +26,48 @@ export const addressService = {
 
       const data = await response.json()
 
-      if (data.success && data.addresses) {
-        return {
-          success: true,
-          data: {
-            addresses: data.addresses.map(address => {
-              // The API now returns parsed addresses directly
+      if (data.suggestions && data.suggestions.length > 0) {
+        // Step 2: Resolve each suggestion to get full address details
+        const resolvedAddresses = await Promise.all(
+          data.suggestions.map(async (suggestion) => {
+            try {
+              const getUrl = `${GETADDRESS_API_BASE}/get/${suggestion.id}?api-key=${DOMAIN_TOKEN}`
+              const getResponse = await fetch(getUrl)
+              if (!getResponse.ok) {
+                // Fallback: parse from the suggestion text
+                return this._parseSuggestion(suggestion, query)
+              }
+              const fullAddr = await getResponse.json()
               return {
-                id: address.id,
-                formatted: address.formatted_address || address.address,
-                line1: address.line1 || '',
-                line2: address.line2 || '',
-                city: address.city || '',
-                county: address.county || '',
-                postcode: address.postcode || '',
+                id: suggestion.id,
+                formatted: suggestion.address,
+                line1: fullAddr.line_1 || '',
+                line2: fullAddr.line_2 || '',
+                city: fullAddr.town_or_city || '',
+                county: fullAddr.county || '',
+                postcode: fullAddr.postcode || '',
                 country: 'United Kingdom'
               }
-            })
-          }
+            } catch {
+              return this._parseSuggestion(suggestion, query)
+            }
+          })
+        )
+
+        return {
+          success: true,
+          data: { addresses: resolvedAddresses }
         }
       } else {
         return {
           success: false,
-          error: data.error || 'No addresses found for this search'
+          error: 'No addresses found for this search'
         }
       }
     } catch (error) {
       console.error('Address lookup error:', error)
 
-      if (error.response?.status === 404) {
-        return {
-          success: false,
-          error: 'Address not found. Please check and try again.'
-        }
-      } else if (error.response?.status === 429) {
+      if (error.message?.includes('429')) {
         return {
           success: false,
           error: 'Too many requests. Please wait a moment and try again.'
@@ -74,6 +78,36 @@ export const addressService = {
           error: error.message || 'Address lookup failed. Please try again or enter manually.'
         }
       }
+    }
+  },
+
+  /**
+   * Fallback parser for when /get endpoint fails
+   */
+  _parseSuggestion(suggestion, originalQuery) {
+    const text = suggestion.address || ''
+    const parts = text.split(',').map(p => p.trim()).filter(Boolean)
+    const postcodeRegex = /\b[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}\b/i
+
+    let postcode = ''
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const match = parts[i].match(postcodeRegex)
+      if (match) {
+        postcode = match[0].trim()
+        parts.splice(i, 1)
+        break
+      }
+    }
+
+    return {
+      id: suggestion.id,
+      formatted: suggestion.address,
+      line1: parts[0] || '',
+      line2: parts[1] || '',
+      city: parts.length >= 3 ? parts[parts.length - 1] : (parts[1] || ''),
+      county: parts.length >= 4 ? parts[parts.length - 1] : '',
+      postcode: postcode || originalQuery || '',
+      country: 'United Kingdom'
     }
   },
 
